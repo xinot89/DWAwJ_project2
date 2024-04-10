@@ -48,18 +48,19 @@ document.getElementById("stationSearchButton").addEventListener('click', functio
 });
 
 //Eventlistener to load data when page is loaded:
-/*document.addEventListener('DOMContentLoaded', () => {
-  //loadData();
-  koeQuery();
+document.addEventListener('DOMContentLoaded', () => {
+  initializeLoad("dropdown");
+  //koeQuery();
 });
-*/
+
 const debugdiv = document.getElementById("debugContentByScript");
 async function justgetqueryworking() {
   /*https://rata.digitraffic.fi/api/v1/live-trains/station/HKI?arrived_trains=5&arriving_trains=5&departed_trains=5&departing_trains=5&include_nonstopping=false&train_categories=Commuter*/
   debugdiv.innerHTML= await datafetch();
 }
-
 //Function to set parameters right for loading data.
+//Renamed following, so it doesn't run all the time and started developing data parsing on separate function:
+
 function initializeLoad(fromwhere) {
   //Query's base address, which is common to all station queries:
   urlbasePerStation = "https://rata.digitraffic.fi/api/v1/live-trains/station/"
@@ -119,7 +120,8 @@ if (nonstoppingBoolean) {
 }
 
 fetchurl = urlbasePerStation+targetStation+arrivedComponent+arrivingComponent+departedComponent+departingComponent+nonstoppingComponent
-console.log(fetchurl)
+//console.log(fetchurl)
+datafetch()
 /*
 Fetched JSON Contains following data:
 Train number -train's number, initial departure date and other infos.
@@ -130,10 +132,25 @@ Train number -train's number, initial departure date and other infos.
  */
 }
 
-
-
 //Function to actually fetch data from server:
-async function datafetch() {
+//Async when fetching from web.
+function datafetch() {
+  fetch('Datasample.json')
+  .then(response => {
+    if (!response.ok) {
+      throw new Error('Sample file loading was not ok');
+    }
+    return response.json();
+  })
+  .then(jsonData => {
+    loadData(jsonData)
+    //console.log(jsonData)
+  })
+  .catch(error => {
+    console.error('There was a problem with the fetch operation:', error);
+  });
+  //Rest of this function is redundant code for web fetching purposes.
+  /*
   try {
     //Await needed for fetch to work at all. Fetch is javascript's built in function.
     const response = await fetch("https://rata.digitraffic.fi/api/v1/live-trains/station/HKI?arrived_trains=5&arriving_trains=5&departed_trains=5&departing_trains=5&include_nonstopping=false&train_categories=Commuter");
@@ -148,6 +165,7 @@ async function datafetch() {
     console.error("Error:", error);
     throw error; // Rethrow the error to be caught by the caller
   }
+  */
 }
 //Function to parse data to site:
 function loadData() {

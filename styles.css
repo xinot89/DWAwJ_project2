@@ -1,0 +1,14 @@
+body {
+    font-size: medium;
+}
+/*Used flexbox instead of tables for formatting. Used tutorial:
+https://css-tricks.com/snippets/css/a-guide-to-flexbox/
+*/
+.container {
+    display: flex;
+    justify-content: flex-start;
+}
+.item {
+    border: solid;
+    padding: 1em;
+}

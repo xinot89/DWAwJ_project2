@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Project 2
+    </title>
+    <link rel="stylesheet" href="styles.css"/>
+</head>
+<body>
+    <div id="taskbrief">
+        General description of the task<br>
+        <br>
+        In this project we will use AJAX to fetch the data from the web. This time the data is not a static file, but rather a stream of data returned by a live server.<br>
+        From a programmers point of view it makes no difference which data source is used, the process is the same:<br>
+        <br>
+        1. First we ask for the data (Ajax call)<br>
+        2. Save the results into a variable and select what data we want to use<br>
+        3. Display the selected data and make it look nice<br>
+        <br>
+        Project will be published in GitHub and deployed to Netlify.<br>
+        Comment every line of JavaScript code you write.<br>
+        DO not use external libraries.<br>
+        Use CSS-styles to style your page.<br>
+        All event handlers should be added dynamically! no hard coded onclick -listeners! <br>
+        <br>
+        Todo:<br>
+        Implement a web page, where the user can select a trainstation and get the current timetables etc. info concerning that station<br>
+        Create nice layout and style for the page<br>
+        Extra points will be given for input field with custom search string<br>
+        Digitraffic API can be found at:<br>
+        <a href="https://www.digitraffic.fi/en/railway-traffic/"></a><br>
+    </div>
+    <div id ="choosebar" class="container">
+        <div class="item">
+            Choose station:
+            <select name="mySelect" id="stationDropDown">
+                <option value="Ml">Malmi</option>
+                <option value="Tna">Tapanila</option>
+                <option value="Pla" selected>Puistola</option>
+                <option value="Tkl">Tikkurila</option>
+            </select>
+            <p>
+            Or type in station code:<br><input id="stationsearch" /><button id="stationSearchButton">Search</button><!--<span id="cityerroroutput"></span>-->
+        </p>
+        <p>
+            <legend>Count of trains to fetch:</legend>
+            <div>
+              <input type="radio" id="radio_5" name="howManyToFetch" value="5" checked/>
+              <label for="radio_5">5 (Default)</label>
+            </div>
+            <div>
+              <input type="radio" id="radio_10" name="howManyToFetch" value="10"/>
+              <label for="radio_10">10</label>
+            </div>
+            <div>
+              <input type="radio" id="radio_20" name="howManyToFetch" value="20"/>
+              <label for="radio_20">20</label>
+            </div>
+            <div>
+                <input type="radio" id="radio_40" name="howManyToFetch" value="40"/>
+                <label for="radio_40">40</label>
+                </div>
+            </p>
+        </div>
+        <div class="item">
+            Include following:<br>
+            <label>
+				<input type="checkbox" name="CheckboxGroup1" value="1" id="CheckboxGroup1_0">
+				Arrived trains
+			</label>
+			<br>
+			<label>
+				<input type="checkbox" checked name="CheckboxGroup1" value="2" id="CheckboxGroup1_1">
+				Arriving trains
+			</label>
+			<br>
+			<label>
+				<input type="checkbox" name="CheckboxGroup1" value="3" id="CheckboxGroup1_2"> 
+                Departed trains
+			</label>
+            <br>
+            <label>
+				<input type="checkbox" name="CheckboxGroup1" value="4" id="CheckboxGroup1_3"> 
+                Departing trains
+			</label>
+            <br>
+            <label>
+				<input type="checkbox" name="CheckboxGroup1" value="5" id="CheckboxGroup1_4"> 
+                Non-stopping
+			</label>
+            <!--arrived_trains=","arriving_trains=","departed_trains=","departing_trains=","include_nonstopping=","train_categories=-->
+        </div>
+    </div>
+    <button onclick="justgetqueryworking()">Trigger debug fetch -function</button>
+    <div id="contentbyscript">
+        
+    </div><br>
+    <div id="debugContentByScript">
+        Debug contents goes here.
+    </div>
+    <script src="scripts.js"></script>
+</body>
+</html>

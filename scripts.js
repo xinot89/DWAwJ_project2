@@ -39,10 +39,19 @@ document.getElementById("stationDropDown").addEventListener('onchange', initiali
 document.getElementById("stationSearchButton").addEventListener('click', initializeLoad("searchbutton"));
 */
 
+//Initialize targetStation -variable here, so it can be used on all functions.
+targetStation = ""
+
+//Preformatted string for if clauses, which contains selected entries:
+//Used when picking entries to table with loaddata()
+selectedDataIfClause = ""
+
 //Event handler function calls encapsulated in anymous function calls, so they aren't called automatically every time that page loads:
+//Listener for Dropdown -menu:
 document.getElementById("stationDropDown").addEventListener('change', function() {
   initializeLoad("dropdown");
 });
+//Listener for search -box:
 document.getElementById("stationSearchButton").addEventListener('click', function() {
   initializeLoad("searchbutton");
 });
@@ -91,10 +100,14 @@ for (var i = 0; i < radioButtons.length; i++) {
   }
 }
 //List of train  categories, in case if needed: https://rata.digitraffic.fi/api/v1/metadata/train-categories
+
 //Make variable for url part which length's verification is easy and can be left empty if concerning checkbox is unchecked:
+//First, set each fetch -setting to 0:
 arrivedComponent = "?arrived_trains=0"
-//Get checkboxes state to know, what to fetch:
+
+//Get checkboxes state to know, what/how many of each to fetch:
 arrivedBoolean = document.getElementById("CheckboxGroup1_0").checked
+//...And if entry data in question is requested, take amount to fetch from radio button's options and modify request URL accordingly:
 if (arrivedBoolean) {
   arrivedComponent = "?arrived_trains="+fetchcount
 }
@@ -121,20 +134,15 @@ if (nonstoppingBoolean) {
 
 fetchurl = urlbasePerStation+targetStation+arrivedComponent+arrivingComponent+departedComponent+departingComponent+nonstoppingComponent
 //console.log(fetchurl)
-datafetch()
-/*
-Fetched JSON Contains following data:
-Train number -train's number, initial departure date and other infos.
-  /timeTableRows -each arrival and stop's times and other infos.
-    stationShortCode = targetStation (variable) NEEDS TO MATCH
-    type = "DEPARTURE" NEEDS TO MATCH
 
- */
+//In production version, fetchurl goes as datafetch's parameter:
+datafetch()
 }
 
 //Function to actually fetch data from server:
 //Async when fetching from web.
 function datafetch() {
+  //When playing with production data, make this function to expect string as input and give that string as parameter to next line instead of sample data.
   fetch('Datasample.json')
   .then(response => {
     if (!response.ok) {
@@ -168,19 +176,152 @@ function datafetch() {
   */
 }
 //Function to parse data to site:
-function loadData() {
-  /*Options from eventlisteners: "dropdown" or "searchbutton"
-  Target url:
-  https://rata.digitraffic.fi/api/v2/graphql/graphql
-  HTTP-pyyntöön tulee lisätä otsikot Content-Type: application/json ja Accept-Encoding: gzip
-  */
+function loadData(inputdata) {
+  //Define different table's components:
   const targetdiv = document.getElementById('contentbyscript');
   const Table = document.createElement('table');
+  //Table's heading -part:
   const TableHead = document.createElement('thead');
   const TableBody = document.createElement('tbody');
+  const TableHeadingRow = document.createElement('tr');
   const TableRow = document.createElement('tr');
-  const TableHeading = document.createElement('th');
-  const TableColumn = document.createElement('td');
+  //Table's heading cells:
+  const DepartureTime = document.createElement('th');
+  const DepartedTime = document.createElement('th');
+  const TrainLetter = document.createElement("th")
+  const TrainDestination = document.createElement("th")
+
+  /* Not in use because dynamic variables are being used for these.
+  Dynamic variables are needed because otherwise javascript messes different data entries together.
+  //Regular columns:
+  const DepartureCol = document.createElement('td');
+  const DepartedCol = document.createElement('td')
+  const TrainLetterCol = document.createElement('td');
+  const TrainDestinationCol = document.createElement('td');
+  */
+
+  //Create heading -columns to table:
+  DepartureTime.textContent ="Departure time"
+  DepartedTime.textContent = "Departed (at)?"
+  TrainLetter.textContent = "Line"
+  TrainDestination.textContent ="Destination"
+  //Append heading columns to new row:
+  TableHeadingRow.appendChild(DepartureTime)
+  TableHeadingRow.appendChild(DepartedTime)
+  TableHeadingRow.appendChild(TrainLetter)
+  TableHeadingRow.appendChild(TrainDestination)
+  //Put row created in previous step to table heading -element:
+  TableHead.appendChild(TableHeadingRow)
+  //Put created table heading -section to table:
+  Table.appendChild(TableHead)
+
+  //Rolling numbers to create new element for each table row and cell:
+  tableRowNum = 0
+  tableColumnNum = 0 
+
+  //Following iterates through every object in data and returns train number and other data on same level:
+  //Sample variable is used to print one sample entry from one entry's subobject:
+  sample = true
+  inputdata.forEach(obj => {
+    //Print one sample row of top level data also:
+    if (sample) {
+      console.log(obj)
+      sample = false
+    }
+
+    //Start row processing by generating unique id to row:
+    //Use iteratedTableRow to generate new rows to table:
+    window['iteratedTableRow'+tableRowNum] = document.createElement('tr');
+
+    //console.log(obj); // This will log each object individually
+    // If you want to access specific properties of each object, you can do so like this:
+    //console.log(obj.timeTableRows); // Replace propertyName with the actual property name you want to access
+
+    //This iterates through each subentry called "timeTableRows":
+    obj.timeTableRows.forEach(ttrow => {
+      
+      station = ttrow.stationShortCode
+      type = ttrow.type
+      //console.log("Station: "+station)
+      //console.log("Targetstation timetable -loopissa: "+ targetStation)
+      if (station == targetStation && type == "DEPARTURE") {
+
+        //console.log("Lyhyt asemakoodi: "+station)
+        console.log(ttrow); // This will log each object individually
+        //Get timedata from JSON to variable:
+        timestamp = ttrow.scheduledTime
+        //Make new date object out of it, date object usage also automatically converts time to local time.:
+        var date = new Date(timestamp);
+        //Get hours and minutes from date -object:
+        var hours = date.getHours();
+        var minutes = date.getMinutes();
+
+        //Add leading zero to minutes if minute -value < 10
+        minutes = minutes < 10 ? "0" + minutes : minutes;
+
+
+        /* Disabled these as othervise each row's column gets same values:
+        i.e. replaced by dyunamic variables.
+        //Initial, ugly table:
+        DepartureCol.textContent = hours
+        //Needed to add following retrospectively as othervise javascript counts hours+minutes together.
+        DepartureCol.textContent += ":"+minutes
+        DepartedCol.textContent = "Not implemented yet"
+        TrainLetterCol.textContent = obj.commuterLineID
+        TrainDestinationCol.textContent = "No idea yet."
+        //Put ugly table's cells to row:
+        window['iteratedTableRow'+tableRowNum].appendChild(DepartureCol)
+        window['iteratedTableRow'+tableRowNum].appendChild(DepartedCol)
+        window['iteratedTableRow'+tableRowNum].appendChild(TrainLetterCol)
+        window['iteratedTableRow'+tableRowNum].appendChild(TrainDestinationCol)
+        */
+
+
+        //Columns made with rolling number:
+        //"window" packages given string and variable's value as string name, so it suits well this use case.
+        window['iteratedTableColumn'+tableColumnNum] = document.createElement('td');
+
+        //Initial, ugly table:
+        window['iteratedTableColumn'+tableColumnNum].textContent = hours
+        //Needed to add following retrospectively as othervise javascript counts hours+minutes together.
+        window['iteratedTableColumn'+tableColumnNum].textContent += ":"+minutes
+        window['iteratedTableRow'+tableRowNum].appendChild(window['iteratedTableColumn'+tableColumnNum])
+        //console.log("TableColumnNum ennen plussausta: " + tableColumnNum)
+        tableColumnNum ++
+        //console.log("TableColumnNum plussauksen jälkeen: " + tableColumnNum)
+
+        //This is basically new variable, so it's necessary to set this each time separately:
+        window['iteratedTableColumn'+tableColumnNum] = document.createElement('td');
+        window['iteratedTableColumn'+tableColumnNum].textContent = "Not implemented yet"
+        window['iteratedTableRow'+tableRowNum].appendChild(window['iteratedTableColumn'+tableColumnNum])
+        tableColumnNum ++
+        window['iteratedTableColumn'+tableColumnNum] = document.createElement('td');
+        window['iteratedTableColumn'+tableColumnNum].textContent = obj.commuterLineID
+        window['iteratedTableRow'+tableRowNum].appendChild(window['iteratedTableColumn'+tableColumnNum])
+        tableColumnNum ++
+        window['iteratedTableColumn'+tableColumnNum] = document.createElement('td');
+        window['iteratedTableColumn'+tableColumnNum].textContent = "No idea yet."
+        window['iteratedTableRow'+tableRowNum].appendChild(window['iteratedTableColumn'+tableColumnNum])
+        tableColumnNum ++        
+
+        //And row to Table body:
+        TableBody.appendChild(window['iteratedTableRow'+tableRowNum])
+        console.log("Appendin jälkeen: " + window['iteratedTableRow'+tableRowNum].textContent + "Rnro:" + tableRowNum)
+        
+
+      }
+      
+    });
+    console.log("Appendin jälkeen, ennen lisäystä: " + window['iteratedTableRow'+tableRowNum].textContent + "Rnro:" + tableRowNum)
+    tableRowNum ++
+  });
+  //Add table body to table:
+Table.appendChild(TableBody)
+
+  //Clear target div before appending table:
+  targetdiv.innerHTML = ""
+  //Finally, inject table to target div:
+  targetdiv.appendChild(Table)
 
 }
 function addTask() {

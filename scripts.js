@@ -73,70 +73,69 @@ async function justgetqueryworking() {
 function initializeLoad(fromwhere) {
   //Query's base address, which is common to all station queries:
   urlbasePerStation = "https://rata.digitraffic.fi/api/v1/live-trains/station/"
-if (fromwhere == "dropdown") {
-  //Get dropdown menu's value (Station code):
-  targetStation = document.getElementById("stationDropDown").value;
-} else if (fromwhere == "searchbutton") {
-  //get textbox's entry:
-  targetStation = document.getElementById("stationsearch").value;
-  //Search entries in JSON:
-  //https://rata.digitraffic.fi/api/v1/metadata/stations (107kb)
+  if (fromwhere == "dropdown") {
+    //Get dropdown menu's value (Station code):
+    targetStation = document.getElementById("stationDropDown").value;
+  } else if (fromwhere == "searchbutton") {
+    //get textbox's entry:
+    targetStation = document.getElementById("stationsearch").value;
+    //Search entries in JSON:
+    //https://rata.digitraffic.fi/api/v1/metadata/stations (107kb)
+  } else {
+    console.log("initializeLoad(fromwhere) didn't get correct arguments.")
+    return false
+    }
+  //Get entries to fetch:
+  //fetchcount = document.getElementsByName("howManyToFetch").values;
 
-} else {
-  console.log("initializeLoad(fromwhere) didn't get correct arguments.")
-  return false
-}
-//Get entries to fetch:
-//fetchcount = document.getElementsByName("howManyToFetch").values;
-
-//FETCHCOUNT limits: 1-600
-var radioButtons = document.getElementsByName("howManyToFetch");
-//For -loop which goes through radio buttons and get's checked radio button's value:
-for (var i = 0; i < radioButtons.length; i++) {
-  if (radioButtons[i].checked) {
-      var fetchcount = radioButtons[i].value;
-      //Exit loop when checked radio button found:
-      break;
+  //FETCHCOUNT limits: 1-600
+  var radioButtons = document.getElementsByName("howManyToFetch");
+  //For -loop which goes through radio buttons and get's checked radio button's value:
+  for (var i = 0; i < radioButtons.length; i++) {
+    if (radioButtons[i].checked) {
+        var fetchcount = radioButtons[i].value;
+        //Exit loop when checked radio button found:
+        break;
+    }
   }
-}
-//List of train  categories, in case if needed: https://rata.digitraffic.fi/api/v1/metadata/train-categories
+  //List of train  categories, in case if needed: https://rata.digitraffic.fi/api/v1/metadata/train-categories
 
-//Make variable for url part which length's verification is easy and can be left empty if concerning checkbox is unchecked:
-//First, set each fetch -setting to 0:
-arrivedComponent = "?arrived_trains=0"
+  //Make variable for url part which length's verification is easy and can be left empty if concerning checkbox is unchecked:
+  //First, set each fetch -setting to 0:
+  arrivedComponent = "?arrived_trains=0"
 
-//Get checkboxes state to know, what/how many of each to fetch:
-arrivedBoolean = document.getElementById("CheckboxGroup1_0").checked
-//...And if entry data in question is requested, take amount to fetch from radio button's options and modify request URL accordingly:
-if (arrivedBoolean) {
-  arrivedComponent = "?arrived_trains="+fetchcount
-}
-arrivingComponent = "&arriving_trains=0"
-arrivingBoolean = document.getElementById("CheckboxGroup1_1").checked
-if (arrivingBoolean) {
-  arrivingComponent = "&arriving_trains="+fetchcount
-}
-departedComponent = "&departed_trains=0"
-departedBoolean = document.getElementById("CheckboxGroup1_2").checked
-if (departedBoolean) {
-  departedComponent = "&departed_trains="+fetchcount
-}
-departingComponent = "&departing_trains=0"
-departingBoolean = document.getElementById("CheckboxGroup1_3").checked
-if (departingBoolean) {
-  departingComponent = "&departing_trains="+fetchcount
-}
-nonstoppingComponent = "&include_nonstopping=0"
-nonstoppingBoolean = document.getElementById("CheckboxGroup1_4").checked
-if (nonstoppingBoolean) {
-  nonstoppingComponent = "&include_nonstopping="+fetchcount
-}
+  //Get checkboxes state to know, what/how many of each to fetch:
+  arrivedBoolean = document.getElementById("CheckboxGroup1_0").checked
+  //...And if entry data in question is requested, take amount to fetch from radio button's options and modify request URL accordingly:
+  if (arrivedBoolean) {
+    arrivedComponent = "?arrived_trains="+fetchcount
+  }
+  arrivingComponent = "&arriving_trains=0"
+  arrivingBoolean = document.getElementById("CheckboxGroup1_1").checked
+  if (arrivingBoolean) {
+    arrivingComponent = "&arriving_trains="+fetchcount
+  }
+  departedComponent = "&departed_trains=0"
+  departedBoolean = document.getElementById("CheckboxGroup1_2").checked
+  if (departedBoolean) {
+    departedComponent = "&departed_trains="+fetchcount
+  }
+  departingComponent = "&departing_trains=0"
+  departingBoolean = document.getElementById("CheckboxGroup1_3").checked
+  if (departingBoolean) {
+    departingComponent = "&departing_trains="+fetchcount
+  }
+  nonstoppingComponent = "&include_nonstopping=0"
+  nonstoppingBoolean = document.getElementById("CheckboxGroup1_4").checked
+  if (nonstoppingBoolean) {
+    nonstoppingComponent = "&include_nonstopping="+fetchcount
+  }
 
-fetchurl = urlbasePerStation+targetStation+arrivedComponent+arrivingComponent+departedComponent+departingComponent+nonstoppingComponent
-//console.log(fetchurl)
+  fetchurl = urlbasePerStation+targetStation+arrivedComponent+arrivingComponent+departedComponent+departingComponent+nonstoppingComponent
+  //console.log(fetchurl)
 
-//In production version, fetchurl goes as datafetch's parameter:
-datafetch()
+  //In production version, fetchurl goes as datafetch's parameter:
+  datafetch()
 }
 
 //Function to actually fetch data from server:
@@ -256,7 +255,12 @@ function loadData(inputdata) {
         var hours = date.getHours();
         var minutes = date.getMinutes();
 
-        //Add leading zero to minutes if minute -value < 10
+        /*
+        Add leading zero to minutes if minute -value < 10
+        This here is conditional (/ternary) operation, basically simple if-else
+        it goes like this:
+        <condition>?<this runs if condition is true.>:<this runs if condition is false>
+        */
         minutes = minutes < 10 ? "0" + minutes : minutes;
 
 

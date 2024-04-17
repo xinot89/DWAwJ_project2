@@ -12,3 +12,16 @@ https://css-tricks.com/snippets/css/a-guide-to-flexbox/
     border: solid;
     padding: 1em;
 }
+#debugContentByScript {
+    display: none;
+}
+table {
+    border-collapse: collapse;
+    width: 700px;
+    border: 1px solid black;
+}
+th, td {
+    padding: 4px;
+    font-family: Verdana;
+    font-size: 12px;
+}

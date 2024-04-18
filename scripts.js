@@ -46,15 +46,88 @@ targetStation = ""
 //Used when picking entries to table with loaddata()
 selectedDataIfClause = ""
 
+//Variable to store last changed element, so browser knows whether to use dropdown menu's or search box's
+//input when e.g. radio buttons are changed.
+lastChanged = "dropdown"
+
 //Event handler function calls encapsulated in anymous function calls, so they aren't called automatically every time that page loads:
 //Listener for Dropdown -menu:
 document.getElementById("stationDropDown").addEventListener('change', function() {
-  initializeLoad("dropdown");
+  lastChanged="dropdown"
+  initializeLoad(lastChanged);
 });
 //Listener for search -box:
 document.getElementById("stationSearchButton").addEventListener('click', function() {
-  initializeLoad("searchbutton");
+  lastChanged="searchbutton"
+  initializeLoad(lastChanged);
 });
+//Event listener for radio buttons:
+var radioButtons = document.getElementsByName("howManyToFetch");
+radioButtons.forEach(function(radioButton) {
+  radioButton.addEventListener('click', function() {
+    initializeLoad(lastChanged);
+  });
+});
+
+//Variable where if statement can check is interval already running:
+let intervalForCheckboxes = 0;
+const initialcheckboxdelay = 1500
+checkBoxDelayAmount = initialcheckboxdelay
+//Event listener for checkboxes:
+document.getElementById("checkBoxes").addEventListener('click', function() {
+    //If interval isn't set:
+    if (intervalForCheckboxes == 0) {
+      //Call checkboxdelay function every 100ms:
+      intervalForCheckboxes = setInterval(checkboxdelay,100);
+      console.log("intervalForCheckboxes after setting: "+ intervalForCheckboxes)
+    } else {
+      console.log("Timeout reset")
+      //reset delay back to 1 second:
+      checkBoxDelayAmount = initialcheckboxdelay
+    }
+
+});
+
+function checkboxdelay() {
+  console.log("Checkbox delay amount at start of checkboxdelay: "+checkBoxDelayAmount)
+  if (checkBoxDelayAmount == 100) {
+    console.log("CheckboxDelayAmount 100")
+    checkBoxDelayAmount = 0
+    clearInterval(intervalForCheckboxes)
+    intervalForCheckboxes = 0;
+    console.log("intervalForCheckboxes after clearing: "+ intervalForCheckboxes)
+    initializeLoad(lastChanged);
+    checkBoxDelayAmount = initialcheckboxdelay
+  } else if (checkBoxDelayAmount > 100) {
+    console.log("CheckboxDelayAmount over 100")
+    checkBoxDelayAmount = checkBoxDelayAmount -100
+  } else {
+    console.log("Something unplanned on checkboxdelay -function.")
+    console.log("Checkbox delay amount: "+checkBoxDelayAmount)
+  }
+}
+
+/*There was plans to implement wait time for other checkbox clicks, but as i wasn't able to get javascript to pause at
+set*/
+//Forgetted this also, probably just calling initializeload after each checkbox click takes less toll on cpu's.
+function sleep(milliseconds) {
+  //From https://stackoverflow.com/questions/1183872/put-a-delay-in-javascript
+  //On there, this is considered at least unreliable.
+  //after battling with javascript while -loop's unwillingness to await for setTimeout to expire i decided to use this:
+  //Works by comparing 2 dates together and breaking from loop if their difference is greater than specified milliseconds.
+  //There's also this 1e7 (1000000) round limit.
+
+  /*This implementation CPU intensive, as it keeps executioner busy by repeating that loop until set time comes.
+  i.e.: Not "green code"
+  */
+  var start = new Date().getTime();
+  for (var i = 0; i < 1e7; i++) {
+    if ((new Date().getTime() - start) > milliseconds){
+      break;
+    }
+  }
+}
+
 
 //Eventlistener to load data when page is loaded:
 document.addEventListener('DOMContentLoaded', () => {
@@ -71,6 +144,7 @@ async function justgetqueryworking() {
 //Renamed following, so it doesn't run all the time and started developing data parsing on separate function:
 
 function initializeLoad(fromwhere) {
+  console.log("Initializeload: "+fromwhere)
   //Query's base address, which is common to all station queries:
   urlbasePerStation = "https://rata.digitraffic.fi/api/v1/live-trains/station/"
   if (fromwhere == "dropdown") {
@@ -224,7 +298,7 @@ function loadData(inputdata) {
   inputdata.forEach(obj => {
     //Print one sample row of top level data also:
     if (sample) {
-      console.log(obj)
+      //console.log(obj)
       sample = false
     }
 
@@ -246,7 +320,7 @@ function loadData(inputdata) {
       if (station == targetStation && type == "DEPARTURE") {
 
         //console.log("Lyhyt asemakoodi: "+station)
-        console.log(ttrow); // This will log each object individually
+        //console.log(ttrow); // This will log each object individually
         //Get timedata from JSON to variable:
         timestamp = ttrow.scheduledTime
         //Make new date object out of it, date object usage also automatically converts time to local time.:
@@ -310,13 +384,13 @@ function loadData(inputdata) {
 
         //And row to Table body:
         TableBody.appendChild(window['iteratedTableRow'+tableRowNum])
-        console.log("Appendin jälkeen: " + window['iteratedTableRow'+tableRowNum].textContent + "Rnro:" + tableRowNum)
+        //console.log("Appendin jälkeen: " + window['iteratedTableRow'+tableRowNum].textContent + "Rnro:" + tableRowNum)
         
 
       }
       
     });
-    console.log("Appendin jälkeen, ennen lisäystä: " + window['iteratedTableRow'+tableRowNum].textContent + "Rnro:" + tableRowNum)
+    //console.log("Appendin jälkeen, ennen lisäystä: " + window['iteratedTableRow'+tableRowNum].textContent + "Rnro:" + tableRowNum)
     tableRowNum ++
   });
   //Add table body to table:

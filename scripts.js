@@ -79,9 +79,9 @@ document.getElementById("checkBoxes").addEventListener('click', function() {
     if (intervalForCheckboxes == 0) {
       //Call checkboxdelay function every 100ms:
       intervalForCheckboxes = setInterval(checkboxdelay,100);
-      console.log("intervalForCheckboxes after setting: "+ intervalForCheckboxes)
+      //console.log("intervalForCheckboxes after setting: "+ intervalForCheckboxes)
     } else {
-      console.log("Timeout reset")
+      //console.log("Timeout reset")
       //reset delay back to 1 second:
       checkBoxDelayAmount = initialcheckboxdelay
     }
@@ -89,42 +89,21 @@ document.getElementById("checkBoxes").addEventListener('click', function() {
 });
 
 function checkboxdelay() {
-  console.log("Checkbox delay amount at start of checkboxdelay: "+checkBoxDelayAmount)
+  //console.log("Checkbox delay amount at start of checkboxdelay: "+checkBoxDelayAmount)
   if (checkBoxDelayAmount == 100) {
-    console.log("CheckboxDelayAmount 100")
+    //console.log("CheckboxDelayAmount 100")
     checkBoxDelayAmount = 0
     clearInterval(intervalForCheckboxes)
     intervalForCheckboxes = 0;
-    console.log("intervalForCheckboxes after clearing: "+ intervalForCheckboxes)
+    //console.log("intervalForCheckboxes after clearing: "+ intervalForCheckboxes)
     initializeLoad(lastChanged);
     checkBoxDelayAmount = initialcheckboxdelay
   } else if (checkBoxDelayAmount > 100) {
-    console.log("CheckboxDelayAmount over 100")
+    //console.log("CheckboxDelayAmount over 100")
     checkBoxDelayAmount = checkBoxDelayAmount -100
   } else {
     console.log("Something unplanned on checkboxdelay -function.")
-    console.log("Checkbox delay amount: "+checkBoxDelayAmount)
-  }
-}
-
-/*There was plans to implement wait time for other checkbox clicks, but as i wasn't able to get javascript to pause at
-set*/
-//Forgetted this also, probably just calling initializeload after each checkbox click takes less toll on cpu's.
-function sleep(milliseconds) {
-  //From https://stackoverflow.com/questions/1183872/put-a-delay-in-javascript
-  //On there, this is considered at least unreliable.
-  //after battling with javascript while -loop's unwillingness to await for setTimeout to expire i decided to use this:
-  //Works by comparing 2 dates together and breaking from loop if their difference is greater than specified milliseconds.
-  //There's also this 1e7 (1000000) round limit.
-
-  /*This implementation CPU intensive, as it keeps executioner busy by repeating that loop until set time comes.
-  i.e.: Not "green code"
-  */
-  var start = new Date().getTime();
-  for (var i = 0; i < 1e7; i++) {
-    if ((new Date().getTime() - start) > milliseconds){
-      break;
-    }
+    //console.log("Checkbox delay amount: "+checkBoxDelayAmount)
   }
 }
 

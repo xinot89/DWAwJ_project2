@@ -32,6 +32,7 @@
         <a href="https://www.digitraffic.fi/en/railway-traffic/"></a><br>
         <button onclick="datafetch()">datafetch()</button>
     </div>
+    <a href="Datasample.json" id="sampledatalink">Sample data</a>
     <div id ="choosebar" class="container">
         <div class="item">
             Choose station:
@@ -61,10 +62,10 @@
             <div>
                 <input type="radio" id="radio_40" name="howManyToFetch" value="40"/>
                 <label for="radio_40">40</label>
-                </div>
+            </div>
             </p>
         </div>
-        <div class="item">
+        <div id="checkBoxes" class="item">
             Include following:<br>
             <label>
 				<input type="checkbox" name="CheckboxGroup1" value="1" id="CheckboxGroup1_0">

@@ -50,6 +50,7 @@ selectedDataIfClause = ""
 //input when e.g. radio buttons are changed.
 lastChanged = "dropdown"
 
+
 //Event handler function calls encapsulated in anymous function calls, so they aren't called automatically every time that page loads:
 //Listener for Dropdown -menu:
 document.getElementById("stationDropDown").addEventListener('change', function() {
@@ -77,6 +78,10 @@ checkBoxDelayAmount = initialcheckboxdelay
 document.getElementById("checkBoxes").addEventListener('click', function() {
     //If interval isn't set:
     if (intervalForCheckboxes == 0) {
+      /*Story: I implemented this with setInterval because javascript didn't stop at setTimeout() 
+      For delay, there was also resource intensive for loop -option available which kept computer
+      busy by running loop for waiting time, until set time come but it seemed inappropriate.*/
+
       //Call checkboxdelay function every 100ms:
       intervalForCheckboxes = setInterval(checkboxdelay,100);
       //console.log("intervalForCheckboxes after setting: "+ intervalForCheckboxes)
@@ -114,11 +119,7 @@ document.addEventListener('DOMContentLoaded', () => {
   //koeQuery();
 });
 
-const debugdiv = document.getElementById("debugContentByScript");
-async function justgetqueryworking() {
-  /*https://rata.digitraffic.fi/api/v1/live-trains/station/HKI?arrived_trains=5&arriving_trains=5&departed_trains=5&departing_trains=5&include_nonstopping=false&train_categories=Commuter*/
-  debugdiv.innerHTML= await datafetch();
-}
+
 //Function to set parameters right for loading data.
 //Renamed following, so it doesn't run all the time and started developing data parsing on separate function:
 
@@ -196,11 +197,12 @@ function initializeLoad(fromwhere) {
 function datafetch() {
   //When playing with production data, make this function to expect string as input and give that string as parameter to next line instead of sample data.
   
-  //Fetch sample data:
-  //fetch('Datasample.json')
+  
+  //Choose sample or production data:
+  fetch('Datasample.json')
+  //fetch(fetchurl)
 
-  //Fetch production data:
-  fetch(fetchurl)
+
   .then(response => {
     if (!response.ok) {
       throw new Error('Sample file loading was not ok');
@@ -297,9 +299,10 @@ function loadData(inputdata) {
       
       station = ttrow.stationShortCode
       type = ttrow.type
+
       //console.log("Station: "+station)
       //console.log("Targetstation timetable -loopissa: "+ targetStation)
-      if (station == targetStation && type == "DEPARTURE") {
+      if (station == targetStation && type == "DEPARTURE" && ttrow.commercialStop) {
 
         //console.log("Lyhyt asemakoodi: "+station)
         //console.log(ttrow); // This will log each object individually
@@ -339,7 +342,12 @@ function loadData(inputdata) {
         window['iteratedTableRow'+tableRowNum].appendChild(window['iteratedTableColumn'+tableColumnNum])
         tableColumnNum ++
         window['iteratedTableColumn'+tableColumnNum] = document.createElement('td');
-        window['iteratedTableColumn'+tableColumnNum].textContent = "No idea yet."
+        /*Last row of timetablerows could be good and simple to put into table as destination.
+        There's problem, that commuter trains have only one timetable for day's all trips.
+        Long distance trains timetable seems to end on last stop.
+        For that, i take all timetable's entries into array and take last of them:*/
+        var keys = obj.timeTableRows
+        window['iteratedTableColumn'+tableColumnNum].textContent = keys[keys.length -1].stationShortCode;
         window['iteratedTableRow'+tableRowNum].appendChild(window['iteratedTableColumn'+tableColumnNum])
         tableColumnNum ++
 

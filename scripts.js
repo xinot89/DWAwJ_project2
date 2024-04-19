@@ -181,7 +181,7 @@ function initializeLoad(fromwhere) {
   nonstoppingComponent = "&include_nonstopping=0"
   nonstoppingBoolean = document.getElementById("CheckboxGroup1_4").checked
   if (nonstoppingBoolean) {
-    nonstoppingComponent = "&include_nonstopping="+fetchcount
+    nonstoppingComponent = "&include_nonstopping=1"
   }
 
   fetchurl = urlbasePerStation+targetStation+arrivedComponent+arrivingComponent+departedComponent+departingComponent+nonstoppingComponent
@@ -195,7 +195,12 @@ function initializeLoad(fromwhere) {
 //Async when fetching from web.
 function datafetch() {
   //When playing with production data, make this function to expect string as input and give that string as parameter to next line instead of sample data.
-  fetch('Datasample.json')
+  
+  //Fetch sample data:
+  //fetch('Datasample.json')
+
+  //Fetch production data:
+  fetch(fetchurl)
   .then(response => {
     if (!response.ok) {
       throw new Error('Sample file loading was not ok');
@@ -254,12 +259,10 @@ function loadData(inputdata) {
 
   //Create heading -columns to table:
   DepartureTime.textContent ="Departure time"
-  DepartedTime.textContent = "Departed (at)?"
   TrainLetter.textContent = "Line"
   TrainDestination.textContent ="Destination"
   //Append heading columns to new row:
   TableHeadingRow.appendChild(DepartureTime)
-  TableHeadingRow.appendChild(DepartedTime)
   TableHeadingRow.appendChild(TrainLetter)
   TableHeadingRow.appendChild(TrainDestination)
   //Put row created in previous step to table heading -element:
@@ -310,28 +313,11 @@ function loadData(inputdata) {
 
         /*
         Add leading zero to minutes if minute -value < 10
-        This here is conditional (/ternary) operation, basically simple if-else
+        This is conditional (/ternary) operation, basically simple if-else
         it goes like this:
         <condition>?<this runs if condition is true.>:<this runs if condition is false>
         */
         minutes = minutes < 10 ? "0" + minutes : minutes;
-
-
-        /* Disabled these as othervise each row's column gets same values:
-        i.e. replaced by dyunamic variables.
-        //Initial, ugly table:
-        DepartureCol.textContent = hours
-        //Needed to add following retrospectively as othervise javascript counts hours+minutes together.
-        DepartureCol.textContent += ":"+minutes
-        DepartedCol.textContent = "Not implemented yet"
-        TrainLetterCol.textContent = obj.commuterLineID
-        TrainDestinationCol.textContent = "No idea yet."
-        //Put ugly table's cells to row:
-        window['iteratedTableRow'+tableRowNum].appendChild(DepartureCol)
-        window['iteratedTableRow'+tableRowNum].appendChild(DepartedCol)
-        window['iteratedTableRow'+tableRowNum].appendChild(TrainLetterCol)
-        window['iteratedTableRow'+tableRowNum].appendChild(TrainDestinationCol)
-        */
 
 
         //Columns made with rolling number:
@@ -349,17 +335,13 @@ function loadData(inputdata) {
 
         //This is basically new variable, so it's necessary to set this each time separately:
         window['iteratedTableColumn'+tableColumnNum] = document.createElement('td');
-        window['iteratedTableColumn'+tableColumnNum].textContent = "Not implemented yet"
-        window['iteratedTableRow'+tableRowNum].appendChild(window['iteratedTableColumn'+tableColumnNum])
-        tableColumnNum ++
-        window['iteratedTableColumn'+tableColumnNum] = document.createElement('td');
         window['iteratedTableColumn'+tableColumnNum].textContent = obj.commuterLineID
         window['iteratedTableRow'+tableRowNum].appendChild(window['iteratedTableColumn'+tableColumnNum])
         tableColumnNum ++
         window['iteratedTableColumn'+tableColumnNum] = document.createElement('td');
         window['iteratedTableColumn'+tableColumnNum].textContent = "No idea yet."
         window['iteratedTableRow'+tableRowNum].appendChild(window['iteratedTableColumn'+tableColumnNum])
-        tableColumnNum ++        
+        tableColumnNum ++
 
         //And row to Table body:
         TableBody.appendChild(window['iteratedTableRow'+tableRowNum])

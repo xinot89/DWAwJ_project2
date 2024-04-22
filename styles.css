@@ -42,12 +42,3 @@ th, td {
     color: red;
 
 }
-.checkboxErrorTraining {
-
-    /*h+v offset, blur radius, spread radius, color.......*/
-    box-shadow: 0 0 0 1rem rgba(255, 0, 0, 0.25);
-    accent-color: green;
-    background-color: red;
-    background: #0de281;
-    outline: 3px solid black;
-}

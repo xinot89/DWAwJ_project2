@@ -39,7 +39,6 @@ departedBoolean = false;
 departingBoolean = false;
 nonstoppingBoolean = false;
 
-
 //Event handler function calls encapsulated in anymous function calls, so they aren't called automatically every time that page loads:
 //Listener for Dropdown -menu:
 document.getElementById("stationDropDown").addEventListener('change', function() {
@@ -57,6 +56,10 @@ radioButtons.forEach(function(radioButton) {
   radioButton.addEventListener('click', function() {
     initializeLoad(lastChanged);
   });
+});
+//Eventlistener to load data when page is loaded:
+document.addEventListener('DOMContentLoaded', () => {
+  initializeLoad("dropdown");
 });
 
 //Variable where if statement can check if interval is already running:
@@ -105,14 +108,6 @@ function checkboxdelay() {
     //console.log("Checkbox delay amount: "+checkBoxDelayAmount)
   }
 }
-
-
-//Eventlistener to load data when page is loaded:
-document.addEventListener('DOMContentLoaded', () => {
-  initializeLoad("dropdown");
-  //koeQuery();
-});
-
 
 //Function to set parameters right for loading data.
 //Renamed following, so it doesn't run all the time and started developing data parsing on separate function:
@@ -326,6 +321,7 @@ function populatetable(dataarray) {
   const TableBody = document.createElement('tbody');
   const TableHeadingRow = document.createElement('tr');
   //Table's heading cells:
+  const doesTrainStop = document.createElement('th');
   const ArrivedTime = document.createElement('th');
   const ArrivingTime = document.createElement('th');
   const DepartedTime = document.createElement('th');
@@ -335,6 +331,10 @@ function populatetable(dataarray) {
   const TrainDestination = document.createElement("th")
 
 //Create needed heading -columns to table:
+if (nonstoppingBoolean) {
+  doesTrainStop.textContent="Stopping?"
+  TableHeadingRow.appendChild(doesTrainStop)
+}
 if (arrivedBoolean) {
   ArrivedTime.textContent ="Arrived"
   //Append heading column:
@@ -352,21 +352,30 @@ if (departingBoolean) {
   DepartureTime.textContent ="Departure"
   TableHeadingRow.appendChild(DepartureTime)
 }
+
+TrainLetter.textContent = "Line"
+TrainDestination.textContent ="Destination"
 TableHeadingRow.appendChild(TrainLetter)
 TableHeadingRow.appendChild(TrainDestination)
 //Put row created in previous step to table heading -element:
 TableHead.appendChild(TableHeadingRow)
 //Put created table heading -section to table:
 Table.appendChild(TableHead)
-TrainLetter.textContent = "Line"
-TrainDestination.textContent ="Destination"
 
-  //Rolling numbers to create new element for each table row and cell:
+  //Rolling number for dynamic variables to create new element for each table row and cell:
   tableRowNum = 0
   tableColumnNum = 0 
-    //Make array for timetable entries:
 
-    //Following iterates through every object in data and returns train number and other data on same level:
+
+  /*
+  Boolean values used: 
+  nonstoppingBoolean
+  arrivedBoolean
+  arrivingBoolean
+  departedBoolean
+  departingBoolean
+  */
+    //Following iterates through every object in data-array and returns train number and other data on same level:
     dataarray.forEach(obj => {
 
       //Start row processing by generating unique id to row:
@@ -376,7 +385,6 @@ TrainDestination.textContent ="Destination"
       // If you want to access specific properties of each object, you can do so like this:
       //console.log(obj.timeTableRows); // Replace propertyName with the actual property name you want to access
   
-
 
       //Columns made with rolling number:
       //"window" packages given string and variable's value as string name, so it suits well this use case.

@@ -114,7 +114,6 @@ function checkboxdelay() {
 
 function initializeLoad(fromwhere) {
   checkboxwhitening()
-  console.log("Initializeload: "+fromwhere)
   //Query's base address, which is common to all station queries:
   urlbasePerStation = "https://rata.digitraffic.fi/api/v1/live-trains/station/"
   if (fromwhere == "dropdown") {
@@ -126,7 +125,7 @@ function initializeLoad(fromwhere) {
     //Search entries in JSON:
     //https://rata.digitraffic.fi/api/v1/metadata/stations (107kb)
   } else {
-    console.log("initializeLoad(fromwhere) didn't get correct arguments.")
+    console.log("initializeLoad " +fromwhere+" didn't get correct arguments.")
     return false
     }
   //Get entries to fetch:
@@ -194,7 +193,6 @@ function initializeLoad(fromwhere) {
 }
 
 function checkboxerror() {
-  console.log("Checkboxerror starttasi")
   document.getElementById("checkboxErrorOutput").innerHTML = "Select at least one datatype to fetch."
   errorElements = document.querySelectorAll("checkboxErrorGroup")
   errorElements.forEach(function(element){
@@ -202,7 +200,6 @@ function checkboxerror() {
 })
 }
 function checkboxwhitening() {
-  console.log("Checkboxwhitening started")
   document.getElementById("checkboxErrorOutput").innerHTML = ""
   errorElements = document.querySelectorAll("checkboxErrorGroup")
   errorElements.forEach(function(element){
@@ -216,9 +213,9 @@ function datafetch() {
   //When playing with production data, make this function to expect string as input and give that string as parameter to next line instead of sample data.
   
   //Choose sample or production data:
-  fetch('Datasample.json')
+  fetch('Datasample_short.json')
   //fetch(fetchurl)
-
+  
   .then(response => {
     if (!response.ok) {
       throw new Error('Sample file loading was not ok');
@@ -260,21 +257,15 @@ function loadData(inputdata) {
     //This iterates through each subentry called "timeTableRows":
     obj.timeTableRows.forEach(ttrow => {
       saveAtEnd = false
-      
-      console.log("Now executing object: "+ currentObj + " and timetablerow: "+currentRow)
       station = ttrow.stationShortCode
-      
       type = ttrow.type
-
-      //If -Clause to combine arrivals/departures into same entry:
-      //Trigger if there's something in lastStation:
+      //If -Clause to save subarray with train letter and final destination to parent array.:
       if (lastStation.length >0 && lastStation != station) {
-        console.log("Station changed. Current: "+ station + ", Last: "+ lastStation)
         //This clause saves train's letter or "---" and train's final destination to array.
-        if (obj.commuterLineID.length == 0) {
+        if (lastCommuterLineID.length == 0) {
           ttEntry.push("---")
         } else {
-          ttEntry.push(obj.commuterLineID)
+          ttEntry.push(lastCommuterLineID)
         }
         //Make temporary array from current train's timetable rows to get final destination station:
         var keys = obj.timeTableRows
@@ -284,10 +275,9 @@ function loadData(inputdata) {
         console.log("Tallennettu ttentry:" + ttEntry)
         //Empty lastStation -variable so next round of this loop checks nonstoppingBoolean and gives output accordingly:
         lastStation=""
-        
-      } else {
-        //Start of new timetable row, so clearing subarray for new entries:
+        //Cleanup of array for next timetable entry:
         ttEntry.length = 0
+      } else {
         //Put "Yes/no" to subarrays first entry, if non-stopping trains are selected:
         if (nonStoppingBoolean) {
           if (ttrow.commercialStop) {
@@ -300,9 +290,7 @@ function loadData(inputdata) {
           saveAtEnd = true
         }
         if (arrivingBoolean) {
-          //console.log("Arrivingboolean")
           if (station == targetStation && type == "ARRIVAL" && (ttrow.commercialStop || nonStoppingBoolean)) {
-            console.log("arrival triggered")
             //Get timedata from JSON to variable:
             timestamp = ttrow.scheduledTime
             //Make new date object out of it, date object usage also automatically converts time to local time.:
@@ -312,27 +300,15 @@ function loadData(inputdata) {
             //var hours = date.getHours();
             //var minutes = date.getMinutes();
             ttEntry.push(arrivalTime)
-            //console.log("Arrivalin tallentama array:")
-            //console.log(ttEntry)
             lastStation = station
           }
         }
 
         if (departingBoolean) {
-          //console.log("departingboolean")
           if (station == targetStation && type == "DEPARTURE" && (ttrow.commercialStop || nonStoppingBoolean)) {
-            console.log("Departure triggered")
-            //Get timedata from JSON to variable:
             timestamp = ttrow.scheduledTime
-            //Make new date object out of it, date object usage also automatically converts time to local time.:
-            //Date object is milliseconds since epoch, so it's easy to compare
             var departureTime = new Date(timestamp);
-            //Get hours and minutes from date -object:
-            //var hours = date.getHours();
-            //var minutes = date.getMinutes();
             ttEntry.push(departureTime)
-            //console.log("Departuren tallentama array:")
-            //console.log(ttEntry)
             lastStation = station
           }
         }

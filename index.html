@@ -66,31 +66,38 @@
             </p>
         </div>
         <div id="checkBoxes" class="item">
-            Include following:<br>
-            <label>
-				<input type="checkbox" name="CheckboxGroup1" value="1" id="CheckboxGroup1_0">
-				Arrived trains
-			</label>
-			<br>
-			<label>
-				<input type="checkbox" name="CheckboxGroup1" value="2" id="CheckboxGroup1_1">
-				Arriving trains
-			</label>
-			<br>
-			<label>
-				<input type="checkbox" name="CheckboxGroup1" value="3" id="CheckboxGroup1_2"> 
-                Departed trains
-			</label>
-            <br>
-            <label>
-				<input type="checkbox" checked name="CheckboxGroup1" value="4" id="CheckboxGroup1_3"> 
-                Departing trains
-			</label>
+            Include following:
+            <div>
+                <label>
+                    <input class="checkboxErrorGroup" type="checkbox" name="CheckboxGroup1" value="1" id="CheckboxGroup1_0">
+                    Arrived trains
+                </label>
+                <br>
+                <label>
+                    <input class="checkboxErrorGroup" type="checkbox" name="CheckboxGroup1" value="2" id="CheckboxGroup1_1">
+                    Arriving trains
+                </label>
+                <br>
+                <label>
+                    <input class="checkboxErrorGroup" type="checkbox" name="CheckboxGroup1" value="3" id="CheckboxGroup1_2"> 
+                    Departed trains
+                </label>
+                <br>
+                <label>
+                    <input class="checkboxErrorGroup" type="checkbox" checked name="CheckboxGroup1" value="4" id="CheckboxGroup1_3"> 
+                    Departing trains
+                </label>
+                <br>
+                <span id="checkboxErrorOutput"></span>
+            </div>
             <br>
             <label>
 				<input type="checkbox" name="CheckboxGroup1" value="5" id="CheckboxGroup1_4"> 
-                Non-stopping
+                Include also non-stopping trains.
 			</label>
+            <p>
+            
+            </p>
             <!--arrived_trains=","arriving_trains=","departed_trains=","departing_trains=","include_nonstopping=","train_categories=-->
         </div>
     </div>

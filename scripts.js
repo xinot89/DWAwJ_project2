@@ -37,7 +37,7 @@ arrivedBoolean = false;
 arrivingBoolean = false;
 departedBoolean = false;
 departingBoolean = false;
-nonstoppingBoolean = false;
+nonStoppingBoolean = false;
 
 //Event handler function calls encapsulated in anymous function calls, so they aren't called automatically every time that page loads:
 //Listener for Dropdown -menu:
@@ -177,8 +177,8 @@ function initializeLoad(fromwhere) {
     proceed = true
   }
   nonstoppingComponent = "&include_nonstopping=0"
-  nonstoppingBoolean = document.getElementById("CheckboxGroup1_4").checked
-  if (nonstoppingBoolean) {
+  nonStoppingBoolean = document.getElementById("CheckboxGroup1_4").checked
+  if (nonStoppingBoolean) {
     nonstoppingComponent = "&include_nonstopping=1"
   }
 
@@ -196,8 +196,8 @@ function initializeLoad(fromwhere) {
 function checkboxerror() {
   console.log("Checkboxerror starttasi")
   document.getElementById("checkboxErrorOutput").innerHTML = "Select at least one datatype to fetch."
-errorElements = document.querySelectorAll("checkboxErrorGroup")
-errorElements.forEach(function(element){
+  errorElements = document.querySelectorAll("checkboxErrorGroup")
+  errorElements.forEach(function(element){
   element.classList.add("checkboxErrorOverlay")
 })
 }
@@ -215,11 +215,9 @@ function checkboxwhitening() {
 function datafetch() {
   //When playing with production data, make this function to expect string as input and give that string as parameter to next line instead of sample data.
   
-  
   //Choose sample or production data:
   fetch('Datasample.json')
   //fetch(fetchurl)
-
 
   .then(response => {
     if (!response.ok) {
@@ -234,23 +232,6 @@ function datafetch() {
   .catch(error => {
     console.error('There was a problem with the fetch operation:', error);
   });
-  //Rest of this function is redundant code for web fetching purposes.
-  /*
-  try {
-    //Await needed for fetch to work at all. Fetch is javascript's built in function.
-    const response = await fetch("https://rata.digitraffic.fi/api/v1/live-trains/station/HKI?arrived_trains=5&arriving_trains=5&departed_trains=5&departing_trains=5&include_nonstopping=false&train_categories=Commuter");
-    if (!response.ok) {
-        console.log("fetch ei onnistunut.")
-        throw new Error('Network response was not ok');
-    }
-    const data = await response.text();
-    //console.log("fetch4exc2 ulosanti: " + data);
-    return data;
-  } catch (error) {
-    console.error("Error:", error);
-    throw error; // Rethrow the error to be caught by the caller
-  }
-  */
 }
 
 /*Function to load data to array.
@@ -258,60 +239,138 @@ Originally this function was used to put tata into table,
 but i needed way to order trains by departure time so array offered simple -sounding solution to that.
 Because of this, there might be out of context comments.*/
 function loadData(inputdata) {
-
+  //Save station's name which's info has processed most recently:
+  lastStation =""
+  lastCommuterLineID =""
   //Make array for timetable entries:
   timetableEntries = []
-
   //Following iterates through every object in data and returns train number and other data on same level:
+  
+  currentObj = 0
   inputdata.forEach(obj => {
+    currentObj += 1
+    //Save amount of timetablerows on train, so even last times get pushed into timetablerow's subarray:
+    timeTableRows = obj.timeTableRows.length
+    currentRow = 0
+
 
     //console.log(obj); // This will log each object individually
     // If you want to access specific properties of each object, you can do so like this:
     //console.log(obj.timeTableRows); // Replace propertyName with the actual property name you want to access
 
+    /*In order to get both arrival and departure to same subarray (timetable row) i needed to implement comparison mechanism which persists between timetable rows:*/
+    //Initialize new subarray for timetable-entry:
+    ttEntry = []
     //This iterates through each subentry called "timeTableRows":
     obj.timeTableRows.forEach(ttrow => {
-      
+      saveAtEnd = false
+      currentRow +=1
+      console.log("Now executing object: "+ currentObj + " and timetablerow: "+currentRow)
       station = ttrow.stationShortCode
+      
       type = ttrow.type
 
-      //console.log("Station: "+station)
-      //console.log("Targetstation timetable -loopissa: "+ targetStation)
-      if (station == targetStation && type == "DEPARTURE" && ttrow.commercialStop) {
-        //Create array for each timetable entry:
-        ttEntry = []
-
-        //Get timedata from JSON to variable:
-        timestamp = ttrow.scheduledTime
-        //Make new date object out of it, date object usage also automatically converts time to local time.:
-        //Date object is milliseconds since epoch, so it's easy to compare
-        var date = new Date(timestamp);
-        //Get hours and minutes from date -object:
-        //var hours = date.getHours();
-        //var minutes = date.getMinutes();
-        ttEntry.push(date)
-        ttEntry.push(obj.commuterLineID)
-        //Temporary array for current timetable:
+      //If -Clause to combine arrivals/departures into same entry:
+      //Trigger if there's something in lastStation:
+      if (lastStation.length >0 && lastStation != station) {
+        console.log("Station changed. Current: "+ station + ", Last: "+ lastStation)
+        //This clause saves train's letter or "---" and train's final destination to array.
+        if (obj.commuterLineID.length == 0) {
+          ttEntry.push("---")
+        } else {
+          ttEntry.push(obj.commuterLineID)
+        }
+        //Make temporary array from current train's timetable rows to get final destination station:
         var keys = obj.timeTableRows
         //Take current timetables last entry:
         ttEntry.push(keys[keys.length -1].stationShortCode);
-        //console.log(ttEntry)
         timetableEntries.push(ttEntry)
+        console.log("Tallennettu ttentry:" + ttEntry)
+        //Empty lastStation -variable so next round of this loop checks nonstoppingBoolean and gives output accordingly:
+        lastStation=""
+      } else {
+        //Start of new timetable row, so clearing subarray for new entries:
+        ttEntry.length = 0
+        //Put "Yes/no" to subarrays first entry, if non-stopping trains are selected:
+        if (nonStoppingBoolean) {
+          if (ttrow.commercialStop) {
+            ttEntry.push("Yes.")
+          }
+          ttEntry.push("No.")
+        }
+        //Checks if this is last round of timetablerows:
+        if (currentRow == timeTableRows) {
+          saveAtEnd = true
+        }
+        if (arrivingBoolean) {
+          //console.log("Arrivingboolean")
+          if (station == targetStation && type == "ARRIVAL" && (ttrow.commercialStop || nonStoppingBoolean)) {
+            console.log("arrival triggered")
+            //Get timedata from JSON to variable:
+            timestamp = ttrow.scheduledTime
+            //Make new date object out of it, date object usage also automatically converts time to local time.:
+            //Date object is milliseconds since epoch, so it's easy to compare
+            var arrivalTime = new Date(timestamp);
+            //Get hours and minutes from date -object:
+            //var hours = date.getHours();
+            //var minutes = date.getMinutes();
+            ttEntry.push(arrivalTime)
+            //console.log("Arrivalin tallentama array:")
+            //console.log(ttEntry)
+            lastStation = station
+          }
+        }
+
+        if (departingBoolean) {
+          //console.log("departingboolean")
+          if (station == targetStation && type == "DEPARTURE" && (ttrow.commercialStop || nonStoppingBoolean)) {
+            console.log("Departure triggered")
+            //Get timedata from JSON to variable:
+            timestamp = ttrow.scheduledTime
+            //Make new date object out of it, date object usage also automatically converts time to local time.:
+            //Date object is milliseconds since epoch, so it's easy to compare
+            var departureTime = new Date(timestamp);
+            //Get hours and minutes from date -object:
+            //var hours = date.getHours();
+            //var minutes = date.getMinutes();
+            ttEntry.push(departureTime)
+            //console.log("Departuren tallentama array:")
+            //console.log(ttEntry)
+            lastStation = station
+          }
+        }
+        lastCommuterLineID = obj.commuterLineID
+      }
+      if (saveAtEnd) {
+        //Testing this probably needs terminal station as target.
+        //This clause saves train's letter or "---" and train's final destination to array.
+        if (obj.commuterLineID.length == 0) {
+          ttEntry.push("---")
+        } else {
+          ttEntry.push(obj.commuterLineID)
+        }
+        //Make temporary array from current train's timetable rows to get final destination station:
+        var keys = obj.timeTableRows
+        //Take current timetables last entry:
+        ttEntry.push(keys[keys.length -1].stationShortCode);
+        timetableEntries.push(ttEntry)
+        //Empty lastStation -variable so next round of this loop checks nonstoppingBoolean and gives output accordingly:
+        lastStation=""
       }
     });
-    
   });
 
   //Sort array's contents by time:
   //This compares every pair of first entries in subarrays.
   timetableEntries.sort((a, b) => a[0] - b[0]);
 
-  console.log(timetableEntries)
+  //console.log(timetableEntries)
   //Finally, call function to put array's data to table:
   populatetable(timetableEntries)
 }
 //Function to output array's contents to HTML table.
 function populatetable(dataarray) {
+  //console.log(dataarray)
   
   //Define different table's components:
   const targetdiv = document.getElementById('contentbyscript');
@@ -331,7 +390,7 @@ function populatetable(dataarray) {
   const TrainDestination = document.createElement("th")
 
 //Create needed heading -columns to table:
-if (nonstoppingBoolean) {
+if (nonStoppingBoolean) {
   doesTrainStop.textContent="Stopping?"
   TableHeadingRow.appendChild(doesTrainStop)
 }
@@ -369,7 +428,7 @@ Table.appendChild(TableHead)
 
   /*
   Boolean values used: 
-  nonstoppingBoolean
+  nonStoppingBoolean
   arrivedBoolean
   arrivingBoolean
   departedBoolean

@@ -2,20 +2,7 @@
 https://www.digitraffic.fi/en/railway-traffic/
 */
 
-//Yhden rivin kommentti.
-/*Example GrapQL query from: https://www.digitraffic.fi/en/railway-traffic/#graphql
-{
-  currentlyRunningTrains(where: {operator: {shortCode: {equals: "vr"}}}) {
-    trainNumber
-    departureDate
-    trainLocations(where: {speed: {greaterThan: 30}}, orderBy: {timestamp: DESCENDING}, take: 1) {
-      speed
-      timestamp
-      location
-    }
-  }
-}
-*/
+
 /* Short tutorial on event handlers: https://blog.logrocket.com/dynamically-create-javascript-elements-event-handlers/
 Cannot make sense on */
 //Training section for fetching some data to site and formatting tables:
@@ -24,14 +11,6 @@ let -only available inside the block where they're defined
 var -available throught the function in which they're declared
 https://sentry.io/answers/difference-between-let-and-var-in-javascript/
 */
-
-//FAILSAFE EVENT LISTENERS: Assign constant to dropdown -menu:
-//const stationdropdown = document.getElementById("stationDropDown");
-//const stationSearchButton = document.getElementById("stationSearchButton");
-//Event listener for dropdown menu (Last one is function to be triggered:):
-//stationdropdown.addEventListener('onchange', initializeLoad("dropdown"));
-//Event listener for search button, "click" -events sounds right.
-//stationSearchButton.addEventListener('click', initializeLoad("searchbutton"));
 
 /*Original event handlers, issue with these was that they called configured function every time page loaded.
 //Event listeners for station dropdown -menu and search without setting constants:
@@ -124,6 +103,7 @@ document.addEventListener('DOMContentLoaded', () => {
 //Renamed following, so it doesn't run all the time and started developing data parsing on separate function:
 
 function initializeLoad(fromwhere) {
+  checkboxwhitening()
   console.log("Initializeload: "+fromwhere)
   //Query's base address, which is common to all station queries:
   urlbasePerStation = "https://rata.digitraffic.fi/api/v1/live-trains/station/"
@@ -154,6 +134,9 @@ function initializeLoad(fromwhere) {
   }
   //List of train  categories, in case if needed: https://rata.digitraffic.fi/api/v1/metadata/train-categories
 
+  //Variable to make sure that even something is selected before proceeding with fetching:
+  proceed = false
+
   //Make variable for url part which length's verification is easy and can be left empty if concerning checkbox is unchecked:
   //First, set each fetch -setting to 0:
   arrivedComponent = "?arrived_trains=0"
@@ -163,21 +146,25 @@ function initializeLoad(fromwhere) {
   //...And if entry data in question is requested, take amount to fetch from radio button's options and modify request URL accordingly:
   if (arrivedBoolean) {
     arrivedComponent = "?arrived_trains="+fetchcount
+    proceed = true
   }
   arrivingComponent = "&arriving_trains=0"
   arrivingBoolean = document.getElementById("CheckboxGroup1_1").checked
   if (arrivingBoolean) {
     arrivingComponent = "&arriving_trains="+fetchcount
+    proceed = true
   }
   departedComponent = "&departed_trains=0"
   departedBoolean = document.getElementById("CheckboxGroup1_2").checked
   if (departedBoolean) {
     departedComponent = "&departed_trains="+fetchcount
+    proceed = true
   }
   departingComponent = "&departing_trains=0"
   departingBoolean = document.getElementById("CheckboxGroup1_3").checked
   if (departingBoolean) {
     departingComponent = "&departing_trains="+fetchcount
+    proceed = true
   }
   nonstoppingComponent = "&include_nonstopping=0"
   nonstoppingBoolean = document.getElementById("CheckboxGroup1_4").checked
@@ -189,7 +176,28 @@ function initializeLoad(fromwhere) {
   //console.log(fetchurl)
 
   //In production version, fetchurl goes as datafetch's parameter:
-  datafetch()
+  if (proceed) {
+    datafetch()
+  } else {
+    checkboxerror()
+  }
+}
+
+function checkboxerror() {
+  console.log("Checkboxerror starttasi")
+  document.getElementById("checkboxErrorOutput").innerHTML = "Select at least one datatype to fetch."
+errorElements = document.querySelectorAll("checkboxErrorGroup")
+errorElements.forEach(function(element){
+  element.classList.add("checkboxErrorOverlay")
+})
+}
+function checkboxwhitening() {
+  console.log("Checkboxwhitening started")
+  document.getElementById("checkboxErrorOutput").innerHTML = ""
+  errorElements = document.querySelectorAll("checkboxErrorGroup")
+  errorElements.forEach(function(element){
+  element.classList.remove("checkboxErrorOverlay")
+})
 }
 
 //Function to actually fetch data from server:
@@ -303,9 +311,16 @@ function populatetable(dataarray) {
   const TableBody = document.createElement('tbody');
   const TableHeadingRow = document.createElement('tr');
   //Table's heading cells:
+  const ArrivedTime = document.createElement('th');
+  const ArrivingTime = document.createElement('th');
+  const DepartedTime = document.createElement('th');
   const DepartureTime = document.createElement('th');
+
   const TrainLetter = document.createElement("th")
   const TrainDestination = document.createElement("th")
+
+
+  //Take data from somewhere which heading bars to generate.
 
   //Create heading -columns to table:
   DepartureTime.textContent ="Departure time"

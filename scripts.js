@@ -245,15 +245,11 @@ function loadData(inputdata) {
   //Make array for timetable entries:
   timetableEntries = []
   //Following iterates through every object in data and returns train number and other data on same level:
-  
   currentObj = 0
   inputdata.forEach(obj => {
-    currentObj += 1
     //Save amount of timetablerows on train, so even last times get pushed into timetablerow's subarray:
     timeTableRows = obj.timeTableRows.length
     currentRow = 0
-
-
     //console.log(obj); // This will log each object individually
     // If you want to access specific properties of each object, you can do so like this:
     //console.log(obj.timeTableRows); // Replace propertyName with the actual property name you want to access
@@ -264,7 +260,7 @@ function loadData(inputdata) {
     //This iterates through each subentry called "timeTableRows":
     obj.timeTableRows.forEach(ttrow => {
       saveAtEnd = false
-      currentRow +=1
+      
       console.log("Now executing object: "+ currentObj + " and timetablerow: "+currentRow)
       station = ttrow.stationShortCode
       
@@ -288,6 +284,7 @@ function loadData(inputdata) {
         console.log("Tallennettu ttentry:" + ttEntry)
         //Empty lastStation -variable so next round of this loop checks nonstoppingBoolean and gives output accordingly:
         lastStation=""
+        
       } else {
         //Start of new timetable row, so clearing subarray for new entries:
         ttEntry.length = 0
@@ -357,7 +354,9 @@ function loadData(inputdata) {
         //Empty lastStation -variable so next round of this loop checks nonstoppingBoolean and gives output accordingly:
         lastStation=""
       }
+      currentRow +=1
     });
+    currentObj += 1
   });
 
   //Sort array's contents by time:

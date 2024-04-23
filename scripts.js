@@ -19,15 +19,15 @@ document.getElementById("stationSearchButton").addEventListener('click', initial
 */
 
 //Initialize targetStation -variable here, so it can be used on all functions.
-targetStation = ""
+targetStation = "";
 
 //Preformatted string for if clauses, which contains selected entries:
 //Used when picking entries to table with loaddata()
-selectedDataIfClause = ""
+selectedDataIfClause = "";
 
 //Variable to store last changed element, so browser knows whether to use dropdown menu's or search box's
 //input when e.g. radio buttons are changed.
-lastChanged = "dropdown"
+lastChanged = "dropdown";
 
 /*Initialize checkboxex boolean values here
 initializeLoad -function sets then to actual values for each round
@@ -42,12 +42,12 @@ nonStoppingBoolean = false;
 //Event handler function calls encapsulated in anymous function calls, so they aren't called automatically every time that page loads:
 //Listener for Dropdown -menu:
 document.getElementById("stationDropDown").addEventListener('change', function() {
-  lastChanged="dropdown"
+  lastChanged="dropdown";
   initializeLoad(lastChanged);
 });
 //Listener for search -box:
 document.getElementById("stationSearchButton").addEventListener('click', function() {
-  lastChanged="searchbutton"
+  lastChanged="searchbutton";
   initializeLoad(lastChanged);
 });
 //Event listener for radio buttons:
@@ -64,8 +64,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
 //Variable where if statement can check if interval is already running:
 let intervalForCheckboxes = 0;
-const initialcheckboxdelay = 1500
-checkBoxDelayAmount = initialcheckboxdelay
+const initialcheckboxdelay = 1500;
+checkBoxDelayAmount = initialcheckboxdelay;
 //Event listener that starts delay function for checkboxes or resets delay to 1,5s in case, delay timer is already running:
 document.getElementById("checkBoxes").addEventListener('click', function() {
     //If interval isn't set:
@@ -80,7 +80,7 @@ document.getElementById("checkBoxes").addEventListener('click', function() {
     } else {
       //console.log("Timeout reset")
       //reset delay back to 1 second:
-      checkBoxDelayAmount = initialcheckboxdelay
+      checkBoxDelayAmount = initialcheckboxdelay;
     }
 
 });
@@ -92,17 +92,17 @@ function checkboxdelay() {
       //Seems unnecessary: //Set delay to 0, so event listener knows to start new interval in case of checkbox clicks:
       //Seems unnecessary: checkBoxDelayAmount = 0
     //Remove current interval:
-    clearInterval(intervalForCheckboxes)
+    clearInterval(intervalForCheckboxes);
     //This variable gets set to 2 by timer setting, setting this back to 0 enables event listener to start new delay in case of checkbox clicks:
     intervalForCheckboxes = 0;
     //console.log("intervalForCheckboxes after clearing: "+ intervalForCheckboxes)
     //Initialize loading of data mentioned in dropdown/seachbox:
     initializeLoad(lastChanged);
     //Reset checkbox delay:
-    checkBoxDelayAmount = initialcheckboxdelay
+    checkBoxDelayAmount = initialcheckboxdelay;
   } else if (checkBoxDelayAmount > 100) {
     //console.log("CheckboxDelayAmount over 100")
-    checkBoxDelayAmount = checkBoxDelayAmount -100
+    checkBoxDelayAmount = checkBoxDelayAmount -100;
   } else {
     console.log("Something unplanned on checkboxdelay -function.")
     //console.log("Checkbox delay amount: "+checkBoxDelayAmount)
@@ -113,7 +113,7 @@ function checkboxdelay() {
 //Renamed following, so it doesn't run all the time and started developing data parsing on separate function:
 
 function initializeLoad(fromwhere) {
-  checkboxwhitening()
+  checkboxwhitening();
   //Query's base address, which is common to all station queries:
   urlbasePerStation = "https://rata.digitraffic.fi/api/v1/live-trains/station/"
   if (fromwhere == "dropdown") {
@@ -144,66 +144,66 @@ function initializeLoad(fromwhere) {
   //List of train  categories, in case if needed: https://rata.digitraffic.fi/api/v1/metadata/train-categories
 
   //Variable to make sure that even something is selected before proceeding with fetching:
-  proceed = false
+  proceed = false;
 
   //Make variable for url part which length's verification is easy and can be left empty if concerning checkbox is unchecked:
   //First, set each fetch -setting to 0:
-  arrivedComponent = "?arrived_trains=0"
+  arrivedComponent = "?arrived_trains=0";
 
   //Get checkboxes state to know, what/how many of each to fetch:
-  arrivedBoolean = document.getElementById("CheckboxGroup1_0").checked
+  arrivedBoolean = document.getElementById("CheckboxGroup1_0").checked;
   //...And if entry data in question is requested, take amount to fetch from radio button's options and modify request URL accordingly:
   if (arrivedBoolean) {
-    arrivedComponent = "?arrived_trains="+fetchcount
-    proceed = true
+    arrivedComponent = "?arrived_trains="+fetchcount;
+    proceed = true;
   }
-  arrivingComponent = "&arriving_trains=0"
-  arrivingBoolean = document.getElementById("CheckboxGroup1_1").checked
+  arrivingComponent = "&arriving_trains=0";
+  arrivingBoolean = document.getElementById("CheckboxGroup1_1").checked;
   if (arrivingBoolean) {
-    arrivingComponent = "&arriving_trains="+fetchcount
-    proceed = true
+    arrivingComponent = "&arriving_trains="+fetchcount;
+    proceed = true;
   }
-  departedComponent = "&departed_trains=0"
-  departedBoolean = document.getElementById("CheckboxGroup1_2").checked
+  departedComponent = "&departed_trains=0";
+  departedBoolean = document.getElementById("CheckboxGroup1_2").checked;
   if (departedBoolean) {
-    departedComponent = "&departed_trains="+fetchcount
-    proceed = true
+    departedComponent = "&departed_trains="+fetchcount;
+    proceed = true;
   }
-  departingComponent = "&departing_trains=0"
-  departingBoolean = document.getElementById("CheckboxGroup1_3").checked
+  departingComponent = "&departing_trains=0";
+  departingBoolean = document.getElementById("CheckboxGroup1_3").checked;
   if (departingBoolean) {
-    departingComponent = "&departing_trains="+fetchcount
-    proceed = true
+    departingComponent = "&departing_trains="+fetchcount;
+    proceed = true;
   }
-  nonstoppingComponent = "&include_nonstopping=0"
-  nonStoppingBoolean = document.getElementById("CheckboxGroup1_4").checked
+  nonstoppingComponent = "&include_nonstopping=0";
+  nonStoppingBoolean = document.getElementById("CheckboxGroup1_4").checked;
   if (nonStoppingBoolean) {
-    nonstoppingComponent = "&include_nonstopping=1"
+    nonstoppingComponent = "&include_nonstopping=1";
   }
 
-  fetchurl = urlbasePerStation+targetStation+arrivedComponent+arrivingComponent+departedComponent+departingComponent+nonstoppingComponent
+  fetchurl = urlbasePerStation+targetStation+arrivedComponent+arrivingComponent+departedComponent+departingComponent+nonstoppingComponent;
   //console.log(fetchurl)
 
   //In production version, fetchurl goes as datafetch's parameter:
   if (proceed) {
-    datafetch()
+    datafetch();
   } else {
-    checkboxerror()
+    checkboxerror();
   }
 }
 
 function checkboxerror() {
-  document.getElementById("checkboxErrorOutput").innerHTML = "Select at least one datatype to fetch."
-  errorElements = document.querySelectorAll("checkboxErrorGroup")
+  document.getElementById("checkboxErrorOutput").innerHTML = "Select at least one datatype to fetch.";
+  errorElements = document.querySelectorAll("checkboxErrorGroup");
   errorElements.forEach(function(element){
-  element.classList.add("checkboxErrorOverlay")
+  element.classList.add("checkboxErrorOverlay");
 })
 }
 function checkboxwhitening() {
-  document.getElementById("checkboxErrorOutput").innerHTML = ""
-  errorElements = document.querySelectorAll("checkboxErrorGroup")
+  document.getElementById("checkboxErrorOutput").innerHTML = "";
+  errorElements = document.querySelectorAll("checkboxErrorGroup");
   errorElements.forEach(function(element){
-  element.classList.remove("checkboxErrorOverlay")
+  element.classList.remove("checkboxErrorOverlay");
 })
 }
 
@@ -214,7 +214,7 @@ function datafetch() {
   
   //Choose sample or production data:
   fetch('Datasample_short.json')
-  //fetch(fetchurl)
+  //fetch(fetchurl);
   
   .then(response => {
     if (!response.ok) {
@@ -223,8 +223,7 @@ function datafetch() {
     return response.json();
   })
   .then(jsonData => {
-    loadData(jsonData)
-    //console.log(jsonData)
+    loadData(jsonData);
   })
   .catch(error => {
     console.error('There was a problem with the fetch operation:', error);
@@ -237,124 +236,128 @@ but i needed way to order trains by departure time so array offered simple -soun
 Because of this, there might be out of context comments.*/
 function loadData(inputdata) {
   //Save station's name which's info has processed most recently:
-  lastStation =""
-  lastCommuterLineID =""
+  lastStation ="";
+  lastCommuterLineID ="";
   //Make array for timetable entries:
-  timetableEntries = []
-  currentObj = 0
+  timetableEntries = [];
+  currentObj = 0;
   //Following iterates through every object in data and returns train number and other data on same level:
   inputdata.forEach(obj => {
     //Save amount of timetablerows on train, so even last times get pushed into timetablerow's subarray:
-    timeTableRows = obj.timeTableRows.length
+    timeTableRows = obj.timeTableRows.length;
     //Start counting rows from 1 as timeTableRows also starts from 1.
-    currentRow = 1
+    currentRow = 1;
 
     /*In order to get both arrival and departure to same subarray (timetable row) i needed to implement comparison mechanism which persists between timetable rows:*/
     //Initialize new subarray for timetable-entry:
-    ttEntry = []
+    ttEntry = [];
+
+    //Initialize dynamic subarray numbers:
+    window['iteratedArray'+currentObj+currentRow] = [];
+
     //This iterates through each subentry called "timeTableRows":
     //noStopMarket -variable is for putting only one yes/no at start of array whether train stops in station:
-    stoppingIndicatorEnabled = true
+    stoppingIndicatorEnabled = true;
     obj.timeTableRows.forEach(ttrow => {
-      console.log("Last array at start of ttrow: "+ttEntry)
+
+      console.log("Last array at start of ttrow: "+window['iteratedArray'+currentObj+currentRow]);
       
       //console.log("Row: "+ currentRow + ", obj version: " + obj.version+ " Scheduled time: "+ttrow.scheduledTime)
-      saveAtEnd = false
-      station = ttrow.stationShortCode
-      type = ttrow.type
+      saveAtEnd = false;
+      station = ttrow.stationShortCode;
+      type = ttrow.type;
       //Save timetablerow's array to main array if station has changed since.
       //Reset laststation, train's potential letter and subarray.
       if (lastStation.length >0 && lastStation != station) {
         //console.log(lastStation)
         //This clause saves train's letter or "---" and train's final destination to array.
         if (lastCommuterLineID.length == 0) {
-          ttEntry.push("---")
+          window['iteratedArray'+currentObj+currentRow-1].push("---");
         } else {
-          ttEntry.push(lastCommuterLineID)
+          window['iteratedArray'+currentObj+currentRow-1].push(lastCommuterLineID);
         }
         //Make temporary array from current train's timetable rows to get final destination station:
-        var keys = obj.timeTableRows
+        var keys = obj.timeTableRows;
         //Take current timetables last entry:
-        ttEntry.push(keys[keys.length -1].stationShortCode);
-        timetableEntries.push(ttEntry)
-        console.log("timetableEntries after saved ttEntry: "+timetableEntries)
+        window['iteratedArray'+currentObj+currentRow].push(keys[keys.length -1].stationShortCode);
+        timetableEntries.push(window['iteratedArray'+currentObj+currentRow]);
+        console.log("timetableEntries after saved window['iteratedArray'+currentObj+currentRow]: "+timetableEntries);
         //Empty lastStation -variable so next round of this loop checks nonstoppingBoolean and gives output accordingly:
-        lastStation=""
-        //Cleanup of array for next timetable entry:
-        ttEntry.length = 0
-        lastCommuterLineID = ""
-        stoppingIndicatorEnabled = true
+        lastStation="";
+        lastCommuterLineID = "";
+        stoppingIndicatorEnabled = true;
       } else {
           //Checks if this is last round of timetablerows:
           if (currentRow == timeTableRows) {
-            saveAtEnd = true
+            saveAtEnd = true;
           }
         //Put "Yes/no" to subarrays first entry, if non-stopping trains are selected:
+        console.log("Currentrow + object ennen herjaa: "+currentRow+" "+currentObj);
         if (station == targetStation && stoppingIndicatorEnabled) {
           if (ttrow.commercialStop) {
-            ttEntry.push("Yes.")
-            stoppingIndicatorEnabled=false
+            window['iteratedArray'+currentObj+currentRow].push("Yes.");
+            stoppingIndicatorEnabled=false;
           } else {
-          ttEntry.push("No.")
-          stoppingIndicatorEnabled=false
+          window['iteratedArray'+currentObj+currentRow].push("No.");
+          stoppingIndicatorEnabled=false;
           }
         }
 
         if (arrivingBoolean && station == targetStation && type == "ARRIVAL" && (ttrow.commercialStop || nonStoppingBoolean)) {
-          console.log("Arrivingboolean triggasi, trigannut ttrow:")
-          console.log(ttrow)
+          console.log("Arrivingboolean triggasi, trigannut ttrow:");
+          console.log(ttrow);
           //Get timedata from JSON to variable:
-          timestamp = ttrow.scheduledTime
+          timestamp = ttrow.scheduledTime;
           //Make new date object out of it, date object usage also automatically converts time to local time.:
           //Date object is milliseconds since epoch, so it's easy to compare
           var arrivalTime = new Date(timestamp);
           //Get hours and minutes from date -object:
           //var hours = date.getHours();
           //var minutes = date.getMinutes();
-          console.log(arrivalTime)
-          ttEntry.push(arrivalTime)
-          lastStation = station
+          console.log(arrivalTime);
+          window['iteratedArray'+currentObj+currentRow].push(arrivalTime);
+          lastStation = station;
         }
 
         if (departingBoolean && station == targetStation && type == "DEPARTURE" && (ttrow.commercialStop || nonStoppingBoolean)) {
-          console.log("Departingboolean triggasi, trigannut ttrow:")
-          console.log(ttrow)
-          timestamp = ttrow.scheduledTime
+          console.log("Departingboolean triggasi, trigannut ttrow:");
+          console.log(ttrow);
+          timestamp = ttrow.scheduledTime;
           var departureTime = new Date(timestamp);
-          console.log(departureTime)
-          ttEntry.push(departureTime)
-          lastStation = station
+          console.log(departureTime);
+          window['iteratedArray'+currentObj+currentRow].push(departureTime);
+          lastStation = station;
         }
-        lastCommuterLineID = obj.commuterLineID
+        lastCommuterLineID = obj.commuterLineID;
       }
       //Saving for timetablerow's last row as there's no next round to save previous round's values:
-      if (saveAtEnd && ttEntry.length > 0) {
-        console.log("Saveatend triggered")
-        console.log(ttEntry.length)
+      if (saveAtEnd && window['iteratedArray'+currentObj+currentRow].length > 0) {
+        console.log("Saveatend triggered");
+        console.log(window['iteratedArray'+currentObj+currentRow].length);
         //This clause saves train's letter or "---" and train's final destination to array.
         if (obj.commuterLineID.length == 0) {
-          ttEntry.push("---")
+          window['iteratedArray'+currentObj+currentRow].push("---");
         } else {
-          ttEntry.push(obj.commuterLineID)
+          window['iteratedArray'+currentObj+currentRow].push(obj.commuterLineID);
         }
         //Make temporary array from current train's timetable rows to get final destination station:
-        var keys = obj.timeTableRows
+        var keys = obj.timeTableRows;
         //Take current timetables last entry:
-        ttEntry.push(keys[keys.length -1].stationShortCode);
-        timetableEntries.push(ttEntry)
+        window['iteratedArray'+currentObj+currentRow].push(keys[keys.length -1].stationShortCode);
+        timetableEntries.push(window['iteratedArray'+currentObj+currentRow]);
         //Empty lastStation -variable so next round of this loop checks nonstoppingBoolean and gives output accordingly:
-        lastStation=""
+        lastStation="";
       }
-      currentRow +=1
+      currentRow +=1;
     }); //This line is end of ttrow -loop.
-    currentObj += 1
+    currentObj += 1;
   });
 //console.log(timetableEntries)
   //Sort array's contents by time:
   //This compares every pair of first entries in subarrays.
   //timetableEntries.sort((a, b) => a[1] - b[1]);
 
-  console.log(timetableEntries)
+  console.log("This was going to populatetable: "+timetableEntries);
   //Finally, call function to put array's data to table:
   //populatetable(timetableEntries)
 }
@@ -376,44 +379,44 @@ function populatetable(dataarray) {
   const DepartedTime = document.createElement('th');
   const DepartureTime = document.createElement('th');
 
-  const TrainLetter = document.createElement("th")
-  const TrainDestination = document.createElement("th")
+  const TrainLetter = document.createElement("th");
+  const TrainDestination = document.createElement("th");
 
 //Create needed heading -columns to table:
 if (nonStoppingBoolean) {
-  doesTrainStop.textContent="Stopping?"
-  TableHeadingRow.appendChild(doesTrainStop)
+  doesTrainStop.textContent="Stopping?";
+  TableHeadingRow.appendChild(doesTrainStop);
 }
 if (arrivedBoolean) {
-  ArrivedTime.textContent ="Arrived"
+  ArrivedTime.textContent ="Arrived";
   //Append heading column:
-  TableHeadingRow.appendChild(ArrivedTime)
+  TableHeadingRow.appendChild(ArrivedTime);
 }
 if (arrivingBoolean) {
-  ArrivingTime.textContent = "Arriving"
-  TableHeadingRow.appendChild(ArrivingTime)
+  ArrivingTime.textContent = "Arriving";
+  TableHeadingRow.appendChild(ArrivingTime);
 }
 if (departedBoolean) {
-  DepartedTime.textContent = "Departed"
-  TableHeadingRow.appendChild(DepartedTime)
+  DepartedTime.textContent = "Departed";
+  TableHeadingRow.appendChild(DepartedTime);
 }
 if (departingBoolean) {
-  DepartureTime.textContent ="Departure"
-  TableHeadingRow.appendChild(DepartureTime)
+  DepartureTime.textContent ="Departure";
+  TableHeadingRow.appendChild(DepartureTime);
 }
 
-TrainLetter.textContent = "Line"
-TrainDestination.textContent ="Destination"
-TableHeadingRow.appendChild(TrainLetter)
-TableHeadingRow.appendChild(TrainDestination)
+TrainLetter.textContent = "Line";
+TrainDestination.textContent ="Destination";
+TableHeadingRow.appendChild(TrainLetter);
+TableHeadingRow.appendChild(TrainDestination);
 //Put row created in previous step to table heading -element:
-TableHead.appendChild(TableHeadingRow)
+TableHead.appendChild(TableHeadingRow);
 //Put created table heading -section to table:
-Table.appendChild(TableHead)
+Table.appendChild(TableHead);
 
 //Rolling number for dynamic variables to create new element for each table row and cell:
-tableRowNum = 0
-tableColumnNum = 0 
+tableRowNum = 0;
+tableColumnNum = 0;
 
 
 /*
@@ -433,46 +436,46 @@ departingBoolean
     //console.log(obj); // This will log each object individually
     // If you want to access specific properties of each object, you can do so like this:
     //console.log(obj.timeTableRows); // Replace propertyName with the actual property name you want to access
-    console.log(dataarray)
-    console.log(obj.length)
+    console.log(dataarray);
+    console.log(obj.length);
 
     if (nonStoppingBoolean) {
-      window['iteratedTableColumn'+tableColumnNum].textContent = obj[0]
-      window['iteratedTableRow'+tableRowNum].appendChild(window['iteratedTableColumn'+tableColumnNum])
+      window['iteratedTableColumn'+tableColumnNum].textContent = obj[0];
+      window['iteratedTableRow'+tableRowNum].appendChild(window['iteratedTableColumn'+tableColumnNum]);
       //console.log("TableColumnNum ennen plussausta: " + tableColumnNum)
-      tableColumnNum ++
+      tableColumnNum ++;
     }
     if (arrivedBoolean) {
-      window['iteratedTableColumn'+tableColumnNum].textContent = obj[1]
+      window['iteratedTableColumn'+tableColumnNum].textContent = obj[1];
       //Needed to add following retrospectively as othervise javascript counts hours+minutes together.
-      window['iteratedTableColumn'+tableColumnNum].textContent += ":"+minutes
-      window['iteratedTableRow'+tableRowNum].appendChild(window['iteratedTableColumn'+tableColumnNum])
+      window['iteratedTableColumn'+tableColumnNum].textContent += ":"+minutes;
+      window['iteratedTableRow'+tableRowNum].appendChild(window['iteratedTableColumn'+tableColumnNum]);
       //console.log("TableColumnNum ennen plussausta: " + tableColumnNum)
-      tableColumnNum ++
+      tableColumnNum ++;
     }
     if (arrivingBoolean) {
-      window['iteratedTableColumn'+tableColumnNum].textContent = hours
+      window['iteratedTableColumn'+tableColumnNum].textContent = hours;
       //Needed to add following retrospectively as othervise javascript counts hours+minutes together.
-      window['iteratedTableColumn'+tableColumnNum].textContent += ":"+minutes
-      window['iteratedTableRow'+tableRowNum].appendChild(window['iteratedTableColumn'+tableColumnNum])
+      window['iteratedTableColumn'+tableColumnNum].textContent += ":"+minutes;
+      window['iteratedTableRow'+tableRowNum].appendChild(window['iteratedTableColumn'+tableColumnNum]);
       //console.log("TableColumnNum ennen plussausta: " + tableColumnNum)
-      tableColumnNum ++
+      tableColumnNum ++;
     }
     if (departedBoolean) {
-      window['iteratedTableColumn'+tableColumnNum].textContent = hours
+      window['iteratedTableColumn'+tableColumnNum].textContent = hours;
       //Needed to add following retrospectively as othervise javascript counts hours+minutes together.
-      window['iteratedTableColumn'+tableColumnNum].textContent += ":"+minutes
-      window['iteratedTableRow'+tableRowNum].appendChild(window['iteratedTableColumn'+tableColumnNum])
+      window['iteratedTableColumn'+tableColumnNum].textContent += ":"+minutes;
+      window['iteratedTableRow'+tableRowNum].appendChild(window['iteratedTableColumn'+tableColumnNum]);
       //console.log("TableColumnNum ennen plussausta: " + tableColumnNum)
-      tableColumnNum ++
+      tableColumnNum ++;
     }
     if (departingBoolean) {
-      window['iteratedTableColumn'+tableColumnNum].textContent = hours
+      window['iteratedTableColumn'+tableColumnNum].textContent = hours;
       //Needed to add following retrospectively as othervise javascript counts hours+minutes together.
-      window['iteratedTableColumn'+tableColumnNum].textContent += ":"+minutes
-      window['iteratedTableRow'+tableRowNum].appendChild(window['iteratedTableColumn'+tableColumnNum])
+      window['iteratedTableColumn'+tableColumnNum].textContent += ":"+minutes;
+      window['iteratedTableRow'+tableRowNum].appendChild(window['iteratedTableColumn'+tableColumnNum]);
       //console.log("TableColumnNum ennen plussausta: " + tableColumnNum)
-      tableColumnNum ++
+      tableColumnNum ++;
     }
     //Columns made with rolling number:
     //"window" packages given string and variable's value as string name, so it suits well this use case.
@@ -483,40 +486,40 @@ departingBoolean
     //Add leading zero to minutes if minute -value < 10
     minutes = minutes < 10 ? "0" + minutes : minutes;
 
-    window['iteratedTableColumn'+tableColumnNum].textContent = hours
+    window['iteratedTableColumn'+tableColumnNum].textContent = hours;
     //Needed to add following retrospectively as othervise javascript counts hours+minutes together.
-    window['iteratedTableColumn'+tableColumnNum].textContent += ":"+minutes
-    window['iteratedTableRow'+tableRowNum].appendChild(window['iteratedTableColumn'+tableColumnNum])
+    window['iteratedTableColumn'+tableColumnNum].textContent += ":"+minutes;
+    window['iteratedTableRow'+tableRowNum].appendChild(window['iteratedTableColumn'+tableColumnNum]);
     //console.log("TableColumnNum ennen plussausta: " + tableColumnNum)
-    tableColumnNum ++
+    tableColumnNum ++;
     //console.log("TableColumnNum plussauksen jälkeen: " + tableColumnNum)
 
     //This is basically new variable, so it's necessary to set this each time separately:
     window['iteratedTableColumn'+tableColumnNum] = document.createElement('td');
-    window['iteratedTableColumn'+tableColumnNum].textContent = obj[1]
-    window['iteratedTableRow'+tableRowNum].appendChild(window['iteratedTableColumn'+tableColumnNum])
-    tableColumnNum ++
+    window['iteratedTableColumn'+tableColumnNum].textContent = obj[1];
+    window['iteratedTableRow'+tableRowNum].appendChild(window['iteratedTableColumn'+tableColumnNum]);
+    tableColumnNum ++;
     window['iteratedTableColumn'+tableColumnNum] = document.createElement('td');
     /*Last row of timetablerows could be good and simple to put into table as destination.
     There's problem, that commuter trains have only one timetable for day's all trips.
     Long distance trains timetable seems to end on last stop.
     For that, i take all timetable's entries into array and take last of them:*/
     window['iteratedTableColumn'+tableColumnNum].textContent = obj[2];
-    window['iteratedTableRow'+tableRowNum].appendChild(window['iteratedTableColumn'+tableColumnNum])
-    tableColumnNum ++
+    window['iteratedTableRow'+tableRowNum].appendChild(window['iteratedTableColumn'+tableColumnNum]);
+    tableColumnNum ++;
 
     //And row to Table body:
-    TableBody.appendChild(window['iteratedTableRow'+tableRowNum])
+    TableBody.appendChild(window['iteratedTableRow'+tableRowNum]);
     //console.log("Appendin jälkeen: " + window['iteratedTableRow'+tableRowNum].textContent + "Rnro:" + tableRowNum)      
     
     //console.log("Appendin jälkeen, ennen lisäystä: " + window['iteratedTableRow'+tableRowNum].textContent + "Rnro:" + tableRowNum)
-    tableRowNum ++
+    tableRowNum ++;
   });
   //Add table body to table:
-Table.appendChild(TableBody)
+Table.appendChild(TableBody);
 
 //Clear target div before appending table:
-targetdiv.innerHTML = ""
+targetdiv.innerHTML = "";
 //Finally, inject table to target div:
-targetdiv.appendChild(Table)
+targetdiv.appendChild(Table);
 }

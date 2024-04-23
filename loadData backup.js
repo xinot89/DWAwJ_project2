@@ -194,4 +194,133 @@ function loadData(inputdata) {
   //Finally, call function to put array's data to table:
   populatetable(timetableEntries)
 }
+
+Dump after failed try to use dynamic variables:
+function loadData(inputdata) {
+  //Save station's name which's info has processed most recently:
+  lastStation ="";
+  lastCommuterLineID ="";
+  //Make array for timetable entries:
+  timetableEntries = [];
+  currentObj = 0;
+  //Following iterates through every object in data and returns train number and other data on same level:
+  inputdata.forEach(obj => {
+    //Save amount of timetablerows on train, so even last times get pushed into timetablerow's subarray:
+    timeTableRows = obj.timeTableRows.length;
+    //Start counting rows from 1 as timeTableRows also starts from 1.
+    currentRow = 1;
+
+    /*In order to get both arrival and departure to same subarray (timetable row) i needed to implement comparison mechanism which persists between timetable rows:*/
+    //Initialize new subarray for timetable-entry:
+    ttEntry = [];
+
+
+
+    //This iterates through each subentry called "timeTableRows":
+    //noStopMarket -variable is for putting only one yes/no at start of array whether train stops in station:
+    stoppingIndicatorEnabled = true;
+    obj.timeTableRows.forEach(ttrow => {
+      //Initialize dynamic subarray numbers:
+      window['iteratedArray'+currentObj+currentRow] = [];
+      console.log("Last array at start of ttrow: "+window['iteratedArray'+currentObj+currentRow-1]);
+      
+      //console.log("Row: "+ currentRow + ", obj version: " + obj.version+ " Scheduled time: "+ttrow.scheduledTime)
+      saveAtEnd = false;
+      station = ttrow.stationShortCode;
+      type = ttrow.type;
+      //Save timetablerow's array to main array if station has changed since.
+      //Reset laststation, train's potential letter and subarray.
+      if (lastStation.length >0 && lastStation != station) {
+        //console.log(lastStation)
+        //This clause saves train's letter or "---" and train's final destination to array.
+        if (lastCommuterLineID.length == 0) {
+          window['iteratedArray'+currentObj+(currentRow-1)].push("---");
+        } else {
+          window['iteratedArray'+currentObj+(currentRow-1)].push(lastCommuterLineID);
+        }
+        //Make temporary array from current train's timetable rows to get final destination station:
+        var keys = obj.timeTableRows;
+        //Take current timetables last entry:
+        window['iteratedArray'+currentObj+currentRow].push(keys[keys.length -1].stationShortCode);
+        timetableEntries.push(window['iteratedArray'+currentObj+currentRow]);
+        console.log("timetableEntries after saved window['iteratedArray'+currentObj+currentRow]: "+timetableEntries);
+        //Empty lastStation -variable so next round of this loop checks nonstoppingBoolean and gives output accordingly:
+        lastStation="";
+        lastCommuterLineID = "";
+        stoppingIndicatorEnabled = true;
+      } else {
+          //Checks if this is last round of timetablerows:
+          if (currentRow == timeTableRows) {
+            saveAtEnd = true;
+          }
+        //Put "Yes/no" to subarrays first entry, if non-stopping trains are selected:
+        console.log("Currentrow + object ennen herjaa: "+currentRow+" "+currentObj);
+        if (station == targetStation && stoppingIndicatorEnabled) {
+          if (ttrow.commercialStop) {
+            window['iteratedArray'+currentObj+currentRow].push("Yes.");
+            stoppingIndicatorEnabled=false;
+          } else {
+          window['iteratedArray'+currentObj+currentRow].push("No.");
+          stoppingIndicatorEnabled=false;
+          }
+        }
+
+        if (arrivingBoolean && station == targetStation && type == "ARRIVAL" && (ttrow.commercialStop || nonStoppingBoolean)) {
+          console.log("Arrivingboolean triggasi, trigannut ttrow:");
+          console.log(ttrow);
+          //Get timedata from JSON to variable:
+          timestamp = ttrow.scheduledTime;
+          //Make new date object out of it, date object usage also automatically converts time to local time.:
+          //Date object is milliseconds since epoch, so it's easy to compare
+          var arrivalTime = new Date(timestamp);
+          //Get hours and minutes from date -object:
+          //var hours = date.getHours();
+          //var minutes = date.getMinutes();
+          console.log(arrivalTime);
+          window['iteratedArray'+currentObj+currentRow].push(arrivalTime);
+          lastStation = station;
+        }
+
+        if (departingBoolean && station == targetStation && type == "DEPARTURE" && (ttrow.commercialStop || nonStoppingBoolean)) {
+          console.log("Departingboolean triggasi, trigannut ttrow:");
+          console.log(ttrow);
+          timestamp = ttrow.scheduledTime;
+          var departureTime = new Date(timestamp);
+          console.log(departureTime);
+          window['iteratedArray'+currentObj+currentRow].push(departureTime);
+          lastStation = station;
+        }
+        lastCommuterLineID = obj.commuterLineID;
+      }
+      //Saving for timetablerow's last row as there's no next round to save previous round's values:
+      if (saveAtEnd && window['iteratedArray'+currentObj+currentRow].length > 0) {
+        console.log("Saveatend triggered");
+        console.log(window['iteratedArray'+currentObj+currentRow].length);
+        //This clause saves train's letter or "---" and train's final destination to array.
+        if (obj.commuterLineID.length == 0) {
+          window['iteratedArray'+currentObj+currentRow].push("---");
+        } else {
+          window['iteratedArray'+currentObj+currentRow].push(obj.commuterLineID);
+        }
+        //Make temporary array from current train's timetable rows to get final destination station:
+        var keys = obj.timeTableRows;
+        //Take current timetables last entry:
+        window['iteratedArray'+currentObj+currentRow].push(keys[keys.length -1].stationShortCode);
+        timetableEntries.push(window['iteratedArray'+currentObj+currentRow]);
+        //Empty lastStation -variable so next round of this loop checks nonstoppingBoolean and gives output accordingly:
+        lastStation="";
+      }
+      currentRow +=1;
+    }); //This line is end of ttrow -loop.
+    currentObj += 1;
+  });
+//console.log(timetableEntries)
+  //Sort array's contents by time:
+  //This compares every pair of first entries in subarrays.
+  //timetableEntries.sort((a, b) => a[1] - b[1]);
+
+  console.log("This was going to populatetable: "+timetableEntries);
+  //Finally, call function to put array's data to table:
+  //populatetable(timetableEntries)
+}
   

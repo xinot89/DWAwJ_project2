@@ -241,7 +241,7 @@ function loadData(inputdata) {
   timetableEntries = [];
   //Last station's code to compare between timetable runs.
   //Each data addition sets these to one it's currently processing: 
-  lastStation = "";
+  lastStation = "noHitsYet";
   lastTrainLetter = "";
   lastTrainDestination ="";
 
@@ -253,7 +253,11 @@ function loadData(inputdata) {
     saveOnLast = false;
     //Variable to indicate if there is saved times at array so we won't get excess train letters and destinations in array:
     savedTimes=false;
+    //Variable to set boolean value on each train if there's stop on targetStation.
+    stoppingIndicatorNotInserted = true;
     obj.timeTableRows.forEach(ttrow => {
+      //Define timetable event type:
+      type = ttrow.type;
       //If station of interest is last, save train letter and destination:
       if (ttrow.stationShortCode == targetStation && timetablerow == obj.timeTableRows.length && savedTimes) {
         console.log("SaveOnLast triggered")
@@ -262,7 +266,7 @@ function loadData(inputdata) {
       //Station code for comparison below:
       currentStation = ttrow.stationShortCode;
       //For each timetablerow, we first check that is this continuing old entry or completely new entry.
-      if (lastStation != currentStation) {
+      if (savedTimes && lastStation != currentStation) {
         //Save last train letter and destination only if there has been previous run.
         if (lastStation.length >0) {
           if (lastTrainLetter.length == 0) {
@@ -274,92 +278,57 @@ function loadData(inputdata) {
         }
         //Save separator to array:
         timetableEntries.push("NEWTRAIN_6b9d87b08a2ee")
+        savedTimes = false;
       }
-      //REWRITING DONE TO THIS POINT.
-
-      if (lastStation.length >0 && lastStation != station) {
-        //console.log(lastStation)
-        //This clause saves train's letter or "---" and train's final destination to array.
-        if (lastCommuterLineID.length == 0) {
-          window['iteratedArray'+currentObj+(currentRow-1)].push("---");
+      if (currentStation == targetStation && stoppingIndicatorNotInserted) {
+        if (ttrow.commercialStop) {
+          timetableEntries.push("Yes.");
+          stoppingIndicatorNotInserted=false;
         } else {
-          window['iteratedArray'+currentObj+(currentRow-1)].push(lastCommuterLineID);
+        timetableEntries.push("No.");
+        stoppingIndicatorNotInserted=false;
         }
-        //Make temporary array from current train's timetable rows to get final destination station:
-        var keys = obj.timeTableRows;
-        //Take current timetables last entry:
-        window['iteratedArray'+currentObj+currentRow].push(keys[keys.length -1].stationShortCode);
-        timetableEntries.push(window['iteratedArray'+currentObj+currentRow]);
-        console.log("timetableEntries after saved window['iteratedArray'+currentObj+currentRow]: "+timetableEntries);
-        //Empty lastStation -variable so next round of this loop checks nonstoppingBoolean and gives output accordingly:
-        lastStation="";
-        lastCommuterLineID = "";
-        stoppingIndicatorEnabled = true;
-      } else {
-          //Checks if this is last round of timetablerows:
-          if (currentRow == timeTableRows) {
-            saveAtEnd = true;
-          }
-        //Put "Yes/no" to subarrays first entry, if non-stopping trains are selected:
-        console.log("Currentrow + object ennen herjaa: "+currentRow+" "+currentObj);
-        if (station == targetStation && stoppingIndicatorEnabled) {
-          if (ttrow.commercialStop) {
-            window['iteratedArray'+currentObj+currentRow].push("Yes.");
-            stoppingIndicatorEnabled=false;
-          } else {
-          window['iteratedArray'+currentObj+currentRow].push("No.");
-          stoppingIndicatorEnabled=false;
-          }
-        }
-
-        if (arrivingBoolean && station == targetStation && type == "ARRIVAL" && (ttrow.commercialStop || nonStoppingBoolean)) {
-          console.log("Arrivingboolean triggasi, trigannut ttrow:");
-          console.log(ttrow);
-          //Get timedata from JSON to variable:
-          timestamp = ttrow.scheduledTime;
-          //Make new date object out of it, date object usage also automatically converts time to local time.:
-          //Date object is milliseconds since epoch, so it's easy to compare
-          var arrivalTime = new Date(timestamp);
-          //Get hours and minutes from date -object:
-          //var hours = date.getHours();
-          //var minutes = date.getMinutes();
-          console.log(arrivalTime);
-          window['iteratedArray'+currentObj+currentRow].push(arrivalTime);
-          lastStation = station;
-        }
-
-        if (departingBoolean && station == targetStation && type == "DEPARTURE" && (ttrow.commercialStop || nonStoppingBoolean)) {
-          console.log("Departingboolean triggasi, trigannut ttrow:");
-          console.log(ttrow);
-          timestamp = ttrow.scheduledTime;
-          var departureTime = new Date(timestamp);
-          console.log(departureTime);
-          window['iteratedArray'+currentObj+currentRow].push(departureTime);
-          lastStation = station;
-        }
-        lastCommuterLineID = obj.commuterLineID;
       }
-      //Saving for timetablerow's last row as there's no next round to save previous round's values:
-      if (saveAtEnd && window['iteratedArray'+currentObj+currentRow].length > 0) {
-        console.log("Saveatend triggered");
-        console.log(window['iteratedArray'+currentObj+currentRow].length);
-        //This clause saves train's letter or "---" and train's final destination to array.
-        if (obj.commuterLineID.length == 0) {
-          window['iteratedArray'+currentObj+currentRow].push("---");
+      if (arrivingBoolean && currentStation == targetStation && type == "ARRIVAL") {
+        console.log("Arrivingboolean triggasi, trigannut ttrow:");
+        console.log(ttrow);
+        //Get timedata from JSON to variable:
+        timestamp = ttrow.scheduledTime;
+        //Make new date object out of it, date object usage also automatically converts time to local time.:
+        //Date object is milliseconds since epoch, so it's easy to compare
+        var arrivalTime = new Date(timestamp);
+        //Get hours and minutes from date -object:
+        //var hours = date.getHours();
+        //var minutes = date.getMinutes();
+        console.log(arrivalTime);
+        timetableEntries.push(arrivalTime);
+        lastStation = currentStation;
+        savedTimes = true;
+      } else if (departingBoolean && currentStation == targetStation && type == "DEPARTURE") {
+        console.log("Departingboolean triggasi, trigannut ttrow:");
+        console.log(ttrow);
+        timestamp = ttrow.scheduledTime;
+        var departureTime = new Date(timestamp);
+        console.log(departureTime);
+        timetableEntries.push(departureTime);
+        lastStation = currentStation;
+        savedTimes = true;
+      }
+      lastTrainLetter = obj.commuterLineID;
+      lastTrainDestination = obj.timeTableRows[obj.timeTableRows.length-1].stationShortCode;
+        
+      if (saveOnLast && savedTimes) {
+        //Save last train letter and destination only if there is saved times.
+        if (lastTrainLetter.length == 0) {
+          timetableEntries.push("---");
         } else {
-          window['iteratedArray'+currentObj+currentRow].push(obj.commuterLineID);
+          timetableEntries.push(lastTrainLetter);
         }
-        //Make temporary array from current train's timetable rows to get final destination station:
-        var keys = obj.timeTableRows;
-        //Take current timetables last entry:
-        window['iteratedArray'+currentObj+currentRow].push(keys[keys.length -1].stationShortCode);
-        timetableEntries.push(window['iteratedArray'+currentObj+currentRow]);
-        //Empty lastStation -variable so next round of this loop checks nonstoppingBoolean and gives output accordingly:
-        lastStation="";
+        timetableEntries.push(lastTrainDestination);
       }
-      currentRow +=1;
-    }); //This line is end of ttrow -loop.
-    currentObj += 1;
+      timetablerow +=1;
+      //Following line is end of ttrow -loop.
+    });
   });
 //console.log(timetableEntries)
   //Sort array's contents by time:

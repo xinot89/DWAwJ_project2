@@ -253,18 +253,19 @@ function loadData(inputdata) {
     //Initialize new subarray for timetable-entry:
     ttEntry = []
     //This iterates through each subentry called "timeTableRows":
-    console.log("Current obj: "+currentObj)
+    //console.log("Current obj: "+currentObj)
     //Only one yes/no at start of array whether train stops in station:
     noStopMarked = true
     obj.timeTableRows.forEach(ttrow => {
+      console.log("Last array at start of ttrow: "+ttEntry)
       
-      console.log("Row: "+ currentRow + ", obj version: " + obj.version+ " Scheduled time: "+ttrow.scheduledTime)
+      //console.log("Row: "+ currentRow + ", obj version: " + obj.version+ " Scheduled time: "+ttrow.scheduledTime)
       saveAtEnd = false
       station = ttrow.stationShortCode
       type = ttrow.type
       //If -Clause to save subarray with train letter and final destination to parent array.:
       if (lastStation.length >0 && lastStation != station) {
-        console.log(lastStation)
+        //console.log(lastStation)
         //This clause saves train's letter or "---" and train's final destination to array.
         if (lastCommuterLineID.length == 0) {
           ttEntry.push("---")
@@ -276,7 +277,7 @@ function loadData(inputdata) {
         //Take current timetables last entry:
         ttEntry.push(keys[keys.length -1].stationShortCode);
         timetableEntries.push(ttEntry)
-        console.log("Tallennettu ttentry:" + ttEntry)
+        console.log("timetableEntries after saved ttEntry: "+timetableEntries)
         //Empty lastStation -variable so next round of this loop checks nonstoppingBoolean and gives output accordingly:
         lastStation=""
         //Cleanup of array for next timetable entry:
@@ -299,32 +300,33 @@ function loadData(inputdata) {
           }
         }
 
-        if (arrivingBoolean) {
-          if (station == targetStation && type == "ARRIVAL" && (ttrow.commercialStop || nonStoppingBoolean)) {
-            //Get timedata from JSON to variable:
-            timestamp = ttrow.scheduledTime
-            //Make new date object out of it, date object usage also automatically converts time to local time.:
-            //Date object is milliseconds since epoch, so it's easy to compare
-            var arrivalTime = new Date(timestamp);
-            //Get hours and minutes from date -object:
-            //var hours = date.getHours();
-            //var minutes = date.getMinutes();
-            ttEntry.push(arrivalTime)
-            lastStation = station
-          }
+        if (arrivingBoolean && station == targetStation && type == "ARRIVAL" && (ttrow.commercialStop || nonStoppingBoolean)) {
+          console.log("Arrivingboolean")
+          //Get timedata from JSON to variable:
+          timestamp = ttrow.scheduledTime
+          //Make new date object out of it, date object usage also automatically converts time to local time.:
+          //Date object is milliseconds since epoch, so it's easy to compare
+          var arrivalTime = new Date(timestamp);
+          //Get hours and minutes from date -object:
+          //var hours = date.getHours();
+          //var minutes = date.getMinutes();
+          console.log(arrivalTime)
+          ttEntry.push(arrivalTime)
+          lastStation = station
         }
-        if (departingBoolean) {
-          if (station == targetStation && type == "DEPARTURE" && (ttrow.commercialStop || nonStoppingBoolean)) {
-            timestamp = ttrow.scheduledTime
-            var departureTime = new Date(timestamp);
-            ttEntry.push(departureTime)
-            lastStation = station
-          }
+
+        if (departingBoolean && station == targetStation && type == "DEPARTURE" && (ttrow.commercialStop || nonStoppingBoolean)) {
+          console.log("Departingboolean")
+          timestamp = ttrow.scheduledTime
+          var departureTime = new Date(timestamp);
+          console.log(departureTime)
+          ttEntry.push(departureTime)
+          lastStation = station
         }
         lastCommuterLineID = obj.commuterLineID
       }
       if (saveAtEnd) {
-        console.log("Saveatend triggered")
+        //console.log("Saveatend triggered")
         //This clause saves train's letter or "---" and train's final destination to array.
         if (obj.commuterLineID.length == 0) {
           ttEntry.push("---")
@@ -340,17 +342,17 @@ function loadData(inputdata) {
         lastStation=""
       }
       currentRow +=1
-    });
+    }); //This line is end of ttrow -loop.
     currentObj += 1
   });
-
+//console.log(timetableEntries)
   //Sort array's contents by time:
   //This compares every pair of first entries in subarrays.
-  timetableEntries.sort((a, b) => a[0] - b[0]);
+  //timetableEntries.sort((a, b) => a[1] - b[1]);
 
-  //console.log(timetableEntries)
+  console.log(timetableEntries)
   //Finally, call function to put array's data to table:
-  populatetable(timetableEntries)
+  //populatetable(timetableEntries)
 }
 //Function to output array's contents to HTML table.
 function populatetable(dataarray) {
@@ -405,72 +407,112 @@ TableHead.appendChild(TableHeadingRow)
 //Put created table heading -section to table:
 Table.appendChild(TableHead)
 
-  //Rolling number for dynamic variables to create new element for each table row and cell:
-  tableRowNum = 0
-  tableColumnNum = 0 
+//Rolling number for dynamic variables to create new element for each table row and cell:
+tableRowNum = 0
+tableColumnNum = 0 
 
 
-  /*
-  Boolean values used: 
-  nonStoppingBoolean
-  arrivedBoolean
-  arrivingBoolean
-  departedBoolean
-  departingBoolean
-  */
-    //Following iterates through every object in data-array and returns train number and other data on same level:
-    dataarray.forEach(obj => {
+/*
+Boolean values used: 
+nonStoppingBoolean
+arrivedBoolean
+arrivingBoolean
+departedBoolean
+departingBoolean
+*/
+  //Following iterates through every object in data-array and returns train number and other data on same level:
+  dataarray.forEach(obj => {
 
-      //Start row processing by generating unique id to row:
-      //Use iteratedTableRow to generate new rows to table:
-      window['iteratedTableRow'+tableRowNum] = document.createElement('tr');
-      //console.log(obj); // This will log each object individually
-      // If you want to access specific properties of each object, you can do so like this:
-      //console.log(obj.timeTableRows); // Replace propertyName with the actual property name you want to access
-  
+    //Start row processing by generating unique id to row:
+    //Use iteratedTableRow to generate new rows to table:
+    window['iteratedTableRow'+tableRowNum] = document.createElement('tr');
+    //console.log(obj); // This will log each object individually
+    // If you want to access specific properties of each object, you can do so like this:
+    //console.log(obj.timeTableRows); // Replace propertyName with the actual property name you want to access
+    console.log(dataarray)
+    console.log(obj.length)
 
-      //Columns made with rolling number:
-      //"window" packages given string and variable's value as string name, so it suits well this use case.
-      window['iteratedTableColumn'+tableColumnNum] = document.createElement('td');
-      //Parse array entry's time to nice format:
-      var hours = obj[0].getHours();
-      var minutes = obj[0].getMinutes();
-      //Add leading zero to minutes if minute -value < 10
-      minutes = minutes < 10 ? "0" + minutes : minutes;
-
+    if (nonStoppingBoolean) {
+      window['iteratedTableColumn'+tableColumnNum].textContent = obj[0]
+      window['iteratedTableRow'+tableRowNum].appendChild(window['iteratedTableColumn'+tableColumnNum])
+      //console.log("TableColumnNum ennen plussausta: " + tableColumnNum)
+      tableColumnNum ++
+    }
+    if (arrivedBoolean) {
+      window['iteratedTableColumn'+tableColumnNum].textContent = obj[1]
+      //Needed to add following retrospectively as othervise javascript counts hours+minutes together.
+      window['iteratedTableColumn'+tableColumnNum].textContent += ":"+minutes
+      window['iteratedTableRow'+tableRowNum].appendChild(window['iteratedTableColumn'+tableColumnNum])
+      //console.log("TableColumnNum ennen plussausta: " + tableColumnNum)
+      tableColumnNum ++
+    }
+    if (arrivingBoolean) {
       window['iteratedTableColumn'+tableColumnNum].textContent = hours
       //Needed to add following retrospectively as othervise javascript counts hours+minutes together.
       window['iteratedTableColumn'+tableColumnNum].textContent += ":"+minutes
       window['iteratedTableRow'+tableRowNum].appendChild(window['iteratedTableColumn'+tableColumnNum])
       //console.log("TableColumnNum ennen plussausta: " + tableColumnNum)
       tableColumnNum ++
-      //console.log("TableColumnNum plussauksen jälkeen: " + tableColumnNum)
+    }
+    if (departedBoolean) {
+      window['iteratedTableColumn'+tableColumnNum].textContent = hours
+      //Needed to add following retrospectively as othervise javascript counts hours+minutes together.
+      window['iteratedTableColumn'+tableColumnNum].textContent += ":"+minutes
+      window['iteratedTableRow'+tableRowNum].appendChild(window['iteratedTableColumn'+tableColumnNum])
+      //console.log("TableColumnNum ennen plussausta: " + tableColumnNum)
+      tableColumnNum ++
+    }
+    if (departingBoolean) {
+      window['iteratedTableColumn'+tableColumnNum].textContent = hours
+      //Needed to add following retrospectively as othervise javascript counts hours+minutes together.
+      window['iteratedTableColumn'+tableColumnNum].textContent += ":"+minutes
+      window['iteratedTableRow'+tableRowNum].appendChild(window['iteratedTableColumn'+tableColumnNum])
+      //console.log("TableColumnNum ennen plussausta: " + tableColumnNum)
+      tableColumnNum ++
+    }
+    //Columns made with rolling number:
+    //"window" packages given string and variable's value as string name, so it suits well this use case.
+    window['iteratedTableColumn'+tableColumnNum] = document.createElement('td');
+    //Parse array entry's time to nice format:
+    var hours = obj[0].getHours();
+    var minutes = obj[0].getMinutes();
+    //Add leading zero to minutes if minute -value < 10
+    minutes = minutes < 10 ? "0" + minutes : minutes;
 
-      //This is basically new variable, so it's necessary to set this each time separately:
-      window['iteratedTableColumn'+tableColumnNum] = document.createElement('td');
-      window['iteratedTableColumn'+tableColumnNum].textContent = obj[1]
-      window['iteratedTableRow'+tableRowNum].appendChild(window['iteratedTableColumn'+tableColumnNum])
-      tableColumnNum ++
-      window['iteratedTableColumn'+tableColumnNum] = document.createElement('td');
-      /*Last row of timetablerows could be good and simple to put into table as destination.
-      There's problem, that commuter trains have only one timetable for day's all trips.
-      Long distance trains timetable seems to end on last stop.
-      For that, i take all timetable's entries into array and take last of them:*/
-      window['iteratedTableColumn'+tableColumnNum].textContent = obj[2];
-      window['iteratedTableRow'+tableRowNum].appendChild(window['iteratedTableColumn'+tableColumnNum])
-      tableColumnNum ++
-      //And row to Table body:
-      TableBody.appendChild(window['iteratedTableRow'+tableRowNum])
-      //console.log("Appendin jälkeen: " + window['iteratedTableRow'+tableRowNum].textContent + "Rnro:" + tableRowNum)      
-      
-      //console.log("Appendin jälkeen, ennen lisäystä: " + window['iteratedTableRow'+tableRowNum].textContent + "Rnro:" + tableRowNum)
-      tableRowNum ++
-    });
-    //Add table body to table:
-  Table.appendChild(TableBody)
-  
-    //Clear target div before appending table:
-    targetdiv.innerHTML = ""
-    //Finally, inject table to target div:
-    targetdiv.appendChild(Table)
+    window['iteratedTableColumn'+tableColumnNum].textContent = hours
+    //Needed to add following retrospectively as othervise javascript counts hours+minutes together.
+    window['iteratedTableColumn'+tableColumnNum].textContent += ":"+minutes
+    window['iteratedTableRow'+tableRowNum].appendChild(window['iteratedTableColumn'+tableColumnNum])
+    //console.log("TableColumnNum ennen plussausta: " + tableColumnNum)
+    tableColumnNum ++
+    //console.log("TableColumnNum plussauksen jälkeen: " + tableColumnNum)
+
+    //This is basically new variable, so it's necessary to set this each time separately:
+    window['iteratedTableColumn'+tableColumnNum] = document.createElement('td');
+    window['iteratedTableColumn'+tableColumnNum].textContent = obj[1]
+    window['iteratedTableRow'+tableRowNum].appendChild(window['iteratedTableColumn'+tableColumnNum])
+    tableColumnNum ++
+    window['iteratedTableColumn'+tableColumnNum] = document.createElement('td');
+    /*Last row of timetablerows could be good and simple to put into table as destination.
+    There's problem, that commuter trains have only one timetable for day's all trips.
+    Long distance trains timetable seems to end on last stop.
+    For that, i take all timetable's entries into array and take last of them:*/
+    window['iteratedTableColumn'+tableColumnNum].textContent = obj[2];
+    window['iteratedTableRow'+tableRowNum].appendChild(window['iteratedTableColumn'+tableColumnNum])
+    tableColumnNum ++
+
+    //And row to Table body:
+    TableBody.appendChild(window['iteratedTableRow'+tableRowNum])
+    //console.log("Appendin jälkeen: " + window['iteratedTableRow'+tableRowNum].textContent + "Rnro:" + tableRowNum)      
+    
+    //console.log("Appendin jälkeen, ennen lisäystä: " + window['iteratedTableRow'+tableRowNum].textContent + "Rnro:" + tableRowNum)
+    tableRowNum ++
+  });
+  //Add table body to table:
+Table.appendChild(TableBody)
+
+//Clear target div before appending table:
+targetdiv.innerHTML = ""
+//Finally, inject table to target div:
+targetdiv.appendChild(Table)
 }

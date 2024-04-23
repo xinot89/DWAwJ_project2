@@ -134,4 +134,64 @@ function loadDataBackup(inputdata) {
     targetdiv.appendChild(Table)
   
   }
+
+//Loaddata backup before implementation of fetching multiple data types to array:
+
+  /*Function to load data to array.
+Originally this function was used to put tata into table,
+but i needed way to order trains by departure time so array offered simple -sounding solution to that.
+Because of this, there might be out of context comments.*/
+function loadData(inputdata) {
+
+  //Make array for timetable entries:
+  timetableEntries = []
+
+  //Following iterates through every object in data and returns train number and other data on same level:
+  inputdata.forEach(obj => {
+
+    //console.log(obj); // This will log each object individually
+    // If you want to access specific properties of each object, you can do so like this:
+    //console.log(obj.timeTableRows); // Replace propertyName with the actual property name you want to access
+
+    //This iterates through each subentry called "timeTableRows":
+    obj.timeTableRows.forEach(ttrow => {
+      
+      station = ttrow.stationShortCode
+      type = ttrow.type
+
+      //console.log("Station: "+station)
+      //console.log("Targetstation timetable -loopissa: "+ targetStation)
+      if (station == targetStation && type == "DEPARTURE" && ttrow.commercialStop) {
+        //Create array for each timetable entry:
+        ttEntry = []
+
+        //Get timedata from JSON to variable:
+        timestamp = ttrow.scheduledTime
+        //Make new date object out of it, date object usage also automatically converts time to local time.:
+        //Date object is milliseconds since epoch, so it's easy to compare
+        var date = new Date(timestamp);
+        //Get hours and minutes from date -object:
+        //var hours = date.getHours();
+        //var minutes = date.getMinutes();
+        ttEntry.push(date)
+        ttEntry.push(obj.commuterLineID)
+        //Temporary array for current timetable:
+        var keys = obj.timeTableRows
+        //Take current timetables last entry:
+        ttEntry.push(keys[keys.length -1].stationShortCode);
+        //console.log(ttEntry)
+        timetableEntries.push(ttEntry)
+      }
+    });
+    
+  });
+
+  //Sort array's contents by time:
+  //This compares every pair of first entries in subarrays.
+  timetableEntries.sort((a, b) => a[0] - b[0]);
+
+  console.log(timetableEntries)
+  //Finally, call function to put array's data to table:
+  populatetable(timetableEntries)
+}
   

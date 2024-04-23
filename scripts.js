@@ -253,9 +253,8 @@ function loadData(inputdata) {
     //Initialize new subarray for timetable-entry:
     ttEntry = []
     //This iterates through each subentry called "timeTableRows":
-    //console.log("Current obj: "+currentObj)
-    //Only one yes/no at start of array whether train stops in station:
-    noStopMarked = true
+    //noStopMarket -variable is for putting only one yes/no at start of array whether train stops in station:
+    stoppingIndicatorEnabled = true
     obj.timeTableRows.forEach(ttrow => {
       console.log("Last array at start of ttrow: "+ttEntry)
       
@@ -263,7 +262,8 @@ function loadData(inputdata) {
       saveAtEnd = false
       station = ttrow.stationShortCode
       type = ttrow.type
-      //If -Clause to save subarray with train letter and final destination to parent array.:
+      //Save timetablerow's array to main array if station has changed since.
+      //Reset laststation, train's potential letter and subarray.
       if (lastStation.length >0 && lastStation != station) {
         //console.log(lastStation)
         //This clause saves train's letter or "---" and train's final destination to array.
@@ -283,25 +283,26 @@ function loadData(inputdata) {
         //Cleanup of array for next timetable entry:
         ttEntry.length = 0
         lastCommuterLineID = ""
-        noStopMarked = true
+        stoppingIndicatorEnabled = true
       } else {
           //Checks if this is last round of timetablerows:
           if (currentRow == timeTableRows) {
             saveAtEnd = true
           }
         //Put "Yes/no" to subarrays first entry, if non-stopping trains are selected:
-        if (station == targetStation && noStopMarked) {
+        if (station == targetStation && stoppingIndicatorEnabled) {
           if (ttrow.commercialStop) {
             ttEntry.push("Yes.")
-            noStopMarked=false
+            stoppingIndicatorEnabled=false
           } else {
           ttEntry.push("No.")
-          noStopMarked=false
+          stoppingIndicatorEnabled=false
           }
         }
 
         if (arrivingBoolean && station == targetStation && type == "ARRIVAL" && (ttrow.commercialStop || nonStoppingBoolean)) {
-          console.log("Arrivingboolean")
+          console.log("Arrivingboolean triggasi, trigannut ttrow:")
+          console.log(ttrow)
           //Get timedata from JSON to variable:
           timestamp = ttrow.scheduledTime
           //Make new date object out of it, date object usage also automatically converts time to local time.:
@@ -316,7 +317,8 @@ function loadData(inputdata) {
         }
 
         if (departingBoolean && station == targetStation && type == "DEPARTURE" && (ttrow.commercialStop || nonStoppingBoolean)) {
-          console.log("Departingboolean")
+          console.log("Departingboolean triggasi, trigannut ttrow:")
+          console.log(ttrow)
           timestamp = ttrow.scheduledTime
           var departureTime = new Date(timestamp);
           console.log(departureTime)
@@ -325,8 +327,10 @@ function loadData(inputdata) {
         }
         lastCommuterLineID = obj.commuterLineID
       }
-      if (saveAtEnd) {
-        //console.log("Saveatend triggered")
+      //Saving for timetablerow's last row as there's no next round to save previous round's values:
+      if (saveAtEnd && ttEntry.length > 0) {
+        console.log("Saveatend triggered")
+        console.log(ttEntry.length)
         //This clause saves train's letter or "---" and train's final destination to array.
         if (obj.commuterLineID.length == 0) {
           ttEntry.push("---")

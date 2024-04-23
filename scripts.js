@@ -238,46 +238,52 @@ Originally this function was used to put tata into table,
 but i needed way to order trains by departure time so array offered simple -sounding solution to that.
 Because of this, there might be out of context comments.*/
 function loadData(inputdata) {
-  //Save station's name which's info has processed most recently:
-  lastStation ="";
-  lastCommuterLineID ="";
-  //Make array for timetable entries:
   timetableEntries = [];
-  currentObj = 0;
-  //Following iterates through every object in data and returns train number and other data on same level:
+  //Last station's code to compare between timetable runs.
+  //Each data addition sets these to one it's currently processing: 
+  lastStation = "";
+  lastTrainLetter = "";
+  lastTrainDestination ="";
+
   inputdata.forEach(obj => {
-    //Save amount of timetablerows on train, so even last times get pushed into timetablerow's subarray:
-    timeTableRows = obj.timeTableRows.length;
-    //Start counting rows from 1 as timeTableRows also starts from 1.
-    currentRow = 1;
-
-    /*In order to get both arrival and departure to same subarray (timetable row) i needed to implement comparison mechanism which persists between timetable rows:*/
-    //Initialize new subarray for timetable-entry:
-    ttEntry = [];
-
-    //Initialize dynamic subarray numbers:
-    window['iteratedArray'+currentObj+currentRow] = [];
-
-    //This iterates through each subentry called "timeTableRows":
-    //noStopMarket -variable is for putting only one yes/no at start of array whether train stops in station:
-    stoppingIndicatorEnabled = true;
+    //Following integer helps timetablerows to recognize, if it's last run or not, so those train letters and destinations come to even last entries:
+    //length starts from 1.
+    timetablerow = 1;
+    //variable which makes loop save train letter and destination to last entry:
+    saveOnLast = false;
+    //Variable to indicate if there is saved times at array so we won't get excess train letters and destinations in array:
+    savedTimes=false;
     obj.timeTableRows.forEach(ttrow => {
+      //If station of interest is last, save train letter and destination:
+      if (ttrow.stationShortCode == targetStation && timetablerow == obj.timeTableRows.length && savedTimes) {
+        console.log("SaveOnLast triggered")
+        saveOnLast = true
+      }
+      //Station code for comparison below:
+      currentStation = ttrow.stationShortCode;
+      //For each timetablerow, we first check that is this continuing old entry or completely new entry.
+      if (lastStation != currentStation) {
+        //Save last train letter and destination only if there has been previous run.
+        if (lastStation.length >0) {
+          if (lastTrainLetter.length == 0) {
+            timetableEntries.push("---");
+          } else {
+            timetableEntries.push(lastTrainLetter);
+          }
+          timetableEntries.push(lastTrainDestination);
+        }
+        //Save separator to array:
+        timetableEntries.push("NEWTRAIN_6b9d87b08a2ee")
+      }
+      //REWRITING DONE TO THIS POINT.
 
-      console.log("Last array at start of ttrow: "+window['iteratedArray'+currentObj+currentRow]);
-      
-      //console.log("Row: "+ currentRow + ", obj version: " + obj.version+ " Scheduled time: "+ttrow.scheduledTime)
-      saveAtEnd = false;
-      station = ttrow.stationShortCode;
-      type = ttrow.type;
-      //Save timetablerow's array to main array if station has changed since.
-      //Reset laststation, train's potential letter and subarray.
       if (lastStation.length >0 && lastStation != station) {
         //console.log(lastStation)
         //This clause saves train's letter or "---" and train's final destination to array.
         if (lastCommuterLineID.length == 0) {
-          window['iteratedArray'+currentObj+currentRow-1].push("---");
+          window['iteratedArray'+currentObj+(currentRow-1)].push("---");
         } else {
-          window['iteratedArray'+currentObj+currentRow-1].push(lastCommuterLineID);
+          window['iteratedArray'+currentObj+(currentRow-1)].push(lastCommuterLineID);
         }
         //Make temporary array from current train's timetable rows to get final destination station:
         var keys = obj.timeTableRows;

@@ -1,6 +1,8 @@
 /* Aletaan pusertamaan seuraavalla eteenpäin:
 https://www.digitraffic.fi/en/railway-traffic/
 */
+/*I used https://jshint.com/ for additional checking of code, this is to tell checker that my code is using functionalities from EcmaScript 6:*/
+/*jshint esversion: 6 */
 
 
 /* Short tutorial on event handlers: https://blog.logrocket.com/dynamically-create-javascript-elements-event-handlers/
@@ -101,11 +103,11 @@ function checkboxdelay() {
     //Reset checkbox delay:
     checkBoxDelayAmount = initialcheckboxdelay;
   } else if (checkBoxDelayAmount > 100) {
-    //console.log("CheckboxDelayAmount over 100")
+    //console.log("CheckboxDelayAmount over 100");
     checkBoxDelayAmount = checkBoxDelayAmount -100;
   } else {
-    console.log("Something unplanned on checkboxdelay -function.")
-    //console.log("Checkbox delay amount: "+checkBoxDelayAmount)
+    console.log("Something unplanned on checkboxdelay -function.");
+    //console.log("Checkbox delay amount: "+checkBoxDelayAmount);
   }
 }
 
@@ -113,9 +115,10 @@ function checkboxdelay() {
 //Renamed following, so it doesn't run all the time and started developing data parsing on separate function:
 
 function initializeLoad(fromwhere) {
+  var fetchcount = 0;
   checkboxwhitening();
   //Query's base address, which is common to all station queries:
-  urlbasePerStation = "https://rata.digitraffic.fi/api/v1/live-trains/station/"
+  urlbasePerStation = "https://rata.digitraffic.fi/api/v1/live-trains/station/";
   if (fromwhere == "dropdown") {
     //Get dropdown menu's value (Station code):
     targetStation = document.getElementById("stationDropDown").value;
@@ -125,8 +128,8 @@ function initializeLoad(fromwhere) {
     //Search entries in JSON:
     //https://rata.digitraffic.fi/api/v1/metadata/stations (107kb)
   } else {
-    console.log("initializeLoad " +fromwhere+" didn't get correct arguments.")
-    return false
+    console.log("initializeLoad " +fromwhere+" didn't get correct arguments.");
+    return false;
     }
   //Get entries to fetch:
   //fetchcount = document.getElementsByName("howManyToFetch").values;
@@ -136,7 +139,7 @@ function initializeLoad(fromwhere) {
   //For -loop which goes through radio buttons and get's checked radio button's value:
   for (var i = 0; i < radioButtons.length; i++) {
     if (radioButtons[i].checked) {
-        var fetchcount = radioButtons[i].value;
+        fetchcount = radioButtons[i].value;
         //Exit loop when checked radio button found:
         break;
     }
@@ -197,14 +200,14 @@ function checkboxerror() {
   errorElements = document.querySelectorAll("checkboxErrorGroup");
   errorElements.forEach(function(element){
   element.classList.add("checkboxErrorOverlay");
-})
+});
 }
 function checkboxwhitening() {
   document.getElementById("checkboxErrorOutput").innerHTML = "";
   errorElements = document.querySelectorAll("checkboxErrorGroup");
   errorElements.forEach(function(element){
   element.classList.remove("checkboxErrorOverlay");
-})
+});
 }
 
 //Function to actually fetch data from server:

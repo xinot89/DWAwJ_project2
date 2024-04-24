@@ -154,7 +154,10 @@ function initializeLoad(fromwhere) {
   arrivedComponent = "?arrived_trains=0";
 
   //Get checkboxes state to know, what/how many of each to fetch:
-  arrivedBoolean = document.getElementById("CheckboxGroup1_0").checked;
+
+  //24.4.2024: Removed arrived/departed selections from page as their value add is questionable.
+  //arrivedBoolean = document.getElementById("CheckboxGroup1_0").checked;
+  arrivedBoolean = false;
   //...And if entry data in question is requested, take amount to fetch from radio button's options and modify request URL accordingly:
   if (arrivedBoolean) {
     arrivedComponent = "?arrived_trains="+fetchcount;
@@ -167,7 +170,8 @@ function initializeLoad(fromwhere) {
     proceed = true;
   }
   departedComponent = "&departed_trains=0";
-  departedBoolean = document.getElementById("CheckboxGroup1_2").checked;
+  //departedBoolean = document.getElementById("CheckboxGroup1_2").checked;
+  departedBoolean = false;
   if (departedBoolean) {
     departedComponent = "&departed_trains="+fetchcount;
     proceed = true;
@@ -335,8 +339,27 @@ function loadData(inputdata) {
 }
 //Function to output array's contents to HTML table.
 function populatetable(dataarray) {
-  //console.log(dataarray)
-  
+  /*Originally i meant to use flat array as input for this function, which i then swapped to subarray -structure
+  and back to flat array when it started feel too complex. Now i again try on this function to split input array to 
+  subarrays for sorting purposes.*/
+
+  //Split input array to subarrays:
+  const separator = "NEWTRAIN_6b9d87b08a2ee"
+  var arrayOfArrays = [];
+  var startIndex = 0;
+
+  for (var i = 0; i < dataarray.length; i++) {
+      if (dataarray[i] === separator) {
+          // Slice the flat array from startIndex to i and push it to arrayOfArrays
+          arrayOfArrays.push(dataarray.slice(startIndex, i));
+          // Update the startIndex to the next element after the separator
+          startIndex = i + 1;
+      }
+  }
+
+  arrayOfArrays.sort((a, b) => a[1] - b[1]);
+  console.log(arrayOfArrays)
+
   //Define different table's components:
   const targetdiv = document.getElementById('contentbyscript');
   const Table = document.createElement('table');
@@ -407,55 +430,7 @@ arrivingBoolean
 departedBoolean
 departingBoolean
 */
-  //Following iterates through every object in data-array and returns train number and other data on same level:
-  dataarray.forEach(obj => {
-    if (firstloop) {
-      window['iteratedTableRow'+tableRowNumber] = document.createElement('tr');
-      firstloop = false;
-    }
-    regexPatternForTrainLetters=/^[A-Z]+$/;
-    regexPatternForTrainStations=/^[A-Z]{2,3}\d{1,}$/;
-    //If input array's first entrry is stopping indicator:
-    if (obj == "Yes." || obj=="No.") {
-      //If non-stopping trains have been requested, put stopping indicator to table:
-      if (nonStoppingBoolean) {
-        //Store current object (stopping indicator) in dynamic variable and append it to table row.
-        window['iterated'+tableComponentNumber] = document.createElement('td');
-        window['iterated'+tableComponentNumber].textContent = obj;
-        window['iteratedTableRow'+tableRowNumber].appendChild(window['iterated'+tableComponentNumber]);
-        tableComponentNumber +=1;
-      }
-      //Found guide to following from: https://stackoverflow.com/questions/2831345/is-there-a-way-to-check-if-a-variable-is-a-date-in-javascript
-    } else if (obj instanceof Date) {
-      /*Take hours and minutes, add leading zero to minutes.*/
-      hours = obj.getHours();
-      minutes = obj.getMinutes();
-      //Add leading zero to minutes if minute -value < 10
-      minutes = minutes < 10 ? "0" + minutes : minutes;
-      window['iterated'+tableComponentNumber] = document.createElement('td');
-      window['iterated'+tableComponentNumber].textContent = hours;
-      window['iterated'+tableComponentNumber].textContent += ":"+minutes;
-      window['iteratedTableRow'+tableRowNumber].appendChild(window['iterated'+tableComponentNumber]);
-      dateObjectsAfterStopInfo +=1;
-      tableComponentNumber +=1;
-    } else if (regexPatternForTrainLetters.test(obj)&&obj.length==1) {
-      window['iterated'+tableComponentNumber] = document.createElement('td');
-      window['iterated'+tableComponentNumber].textContent = obj;
-      window['iteratedTableRow'+tableRowNumber].appendChild(window['iterated'+tableComponentNumber]);
-      tableComponentNumber +=1;
-    } else if (obj.length >1 && obj.length <4) {
-      window['iterated'+tableComponentNumber] = document.createElement('td');
-      window['iterated'+tableComponentNumber].textContent = obj;
-      window['iteratedTableRow'+tableRowNumber].appendChild(window['iterated'+tableComponentNumber]);
-      tableComponentNumber +=1;
-    } else if (obj == "NEWTRAIN_6b9d87b08a2ee") {
-      TableBody.appendChild(window['iteratedTableRow'+tableRowNumber]);
-      tableRowNumber += 1;
-      window['iteratedTableRow'+tableRowNumber] = document.createElement('tr');
-    }
-  });
-  //Add table body to table:
-Table.appendChild(TableBody);
+
 
 //Clear target div before appending table:
 targetdiv.innerHTML = "";

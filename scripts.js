@@ -45,19 +45,35 @@ nonStoppingBoolean = false;
 //Used by populateTable -function.
 dataarrayStore = []
 
+//Dropdown menu for selecting sorting order:
+var sortorder = document.getElementById("sortSelectionDropdown");
+//console.log(sortorder.value);
+//console.log(sortorder.selectedIndex);
 //Variable to store populatetable's sorting order:
 /*
 0: departures, ascending
 1: departures, descending
 2: arrivals, ascending
 3: arrivals, descending */
-sortorder = 0;
+//Original sortorder -variable before dropdown:
+//sortorder = 0;
 
 //Event handler function calls encapsulated in anymous function calls, so they aren't called automatically every time that page loads:
 //Listener for Dropdown -menu:
 document.getElementById("stationDropDown").addEventListener('change', function() {
   lastChanged="dropdown";
   initializeLoad(lastChanged);
+});
+
+//Event listener for dropdown menu to make populatetable sort entries again:
+//Sets also sortorder back to ex. departures, trying to sort with arrivals with only departures selected.
+document.getElementById("sortSelectionDropdown").addEventListener('change', function() {
+  if (-1 < sortorder.value && sortorder.value < 2 && departingBoolean == false) {
+    sortorder.selectedIndex = 2;
+  } else if (sortorder.value > 1 && sortorder.value < 4 && arrivingBoolean == false) {
+    sortorder.selectedIndex = 0;
+  }
+  populatetable(["Sortrequest"])
 });
 //Listener for search -box:
 document.getElementById("stationSearchButton").addEventListener('click', function() {
@@ -81,6 +97,7 @@ let intervalForCheckboxes = 0;
 const initialcheckboxdelay = 1500;
 checkBoxDelayAmount = initialcheckboxdelay;
 //Event listener that starts delay function for checkboxes or resets delay to 1,5s in case, delay timer is already running:
+//Developed originally when there was 4 options so quite futile now.
 document.getElementById("checkBoxes").addEventListener('click', function() {
     //If interval isn't set:
     if (intervalForCheckboxes == 0) {
@@ -179,8 +196,9 @@ function initializeLoad(fromwhere) {
   arrivingBoolean = document.getElementById("CheckboxGroup1_1").checked;
   //Set sorting by selected data if it's set to unselected data:
   //Sortorder 0-1: departures
-  if (sortorder <-1 && sortorder < 2 && departingBoolean == false) {
-    sortorder = 2;
+  //Change sort order to "Arrivals, ascending" if sorting by departures is selected but departures aren't fetched:
+  if (-1 < sortorder.value && sortorder.value < 2 && departingBoolean == false) {
+    sortorder.selectedIndex = 2;
   }
   if (arrivingBoolean) {
     arrivingComponent = "&arriving_trains="+fetchcount;
@@ -197,8 +215,9 @@ function initializeLoad(fromwhere) {
   departingBoolean = document.getElementById("CheckboxGroup1_3").checked;
   //Set sorting by selected data if it's set to unselected data:
   //Sortorder 2-3: arrivals
-  if (sortorder <1 && sortorder < 4 && arrivingBoolean == false) {
-    sortorder = 0;
+  //Change sort order to "Departures, ascending" if sorting by arrivals is selected but arrivals aren't fetched:
+  if (sortorder.value > 1 && sortorder.value < 4 && arrivingBoolean == false) {
+    sortorder.selectedIndex = 0;
   }
   if (departingBoolean) {
     departingComponent = "&departing_trains="+fetchcount;
@@ -362,8 +381,11 @@ function loadData(inputdata) {
 }
 //Function to output array's contents to HTML table.
 function populatetable(dataarray) {
-  if (dataarray="Sortrequest") {
-    console.log("Sorting request received");
+  var arrayOfArrays = [];
+  if (dataarray[0]=="Sortrequest") {
+    //console.log("Sorting request received");
+    //Fill arrayOfArrays with stored data:
+    arrayOfArrays = dataarrayStore;
   } else {
     //This block was originally start of function, until i started developing sorting.
     /*Originally i meant to use flat array as input for this function, which i then swapped to subarray -structure
@@ -371,7 +393,7 @@ function populatetable(dataarray) {
     subarrays for sorting purposes.*/
     //Split input array to subarrays:
     const separator = "NEWTRAIN_6b9d87b08a2ee"
-    var arrayOfArrays = [];
+    
     var startIndex = 0;
 
     for (var i = 0; i < dataarray.length; i++) {
@@ -390,6 +412,9 @@ function populatetable(dataarray) {
     departuresPosition = 1;
     if (arrivingBoolean) {
       arrivalsPosition = 2;
+    } else {
+      //Put something to integer so if statement below won't produce errors with potential empty variables:
+      arrivalsPosition = 99;
     }
   } else {
     if (arrivingBoolean) {
@@ -400,22 +425,20 @@ function populatetable(dataarray) {
   }
 //Sort arrays by wanted sorting order:
 //0: departures, ascending:
-if (sortorder = 0) {
-arrayOfArrays.sort((a, b) => a[departuresPosition] - b[departuresPosition]);
+if (sortorder.value == 0) {
+  arrayOfArrays.sort((a, b) => a[departuresPosition] - b[departuresPosition]);
 //1: departures, descending:
-} else if (sortorder = 1) {
+} else if (sortorder.value == 1) {
   arrayOfArrays.sort((b, a) => a[departuresPosition] - b[departuresPosition]);
 //2: arrivals, ascending:
-} else if (sortorder = 2) {
+} else if (sortorder.value == 2) {
   arrayOfArrays.sort((a, b) => a[arrivalsPosition] - b[arrivalsPosition]);
 //3: arrivals, descending:
-} else if (sortorder = 3) {
+} else if (sortorder.value == 3) {
  arrayOfArrays.sort((b, a) => a[arrivalsPosition] - b[arrivalsPosition]);
 } else {
   console.log("Populatetable didn't get correct sort order parameter.")
 }
-
-  console.log(arrayOfArrays)
 
   //Define different table's components:
   const targetdiv = document.getElementById('contentbyscript');
@@ -472,59 +495,78 @@ tableComponentNumber = 0;
 //Needs to be separate from cells because othervise all cells would be appended to one line.
 tableRowNumber = 0;
 
-//There was some though where this might be necessary, but that thought got lost:
-dateObjectsAfterStopInfo = 0;
-
 //Used for making new row element at start of loop:
 firstloop = true;
 
+arrayOfArrays.forEach(arrayEntries => {
+  /*Declare variable here, so it provides usable data for
+  TableBody.appendChild(window['iteratedTableRow'+tableRowNumber]);
+  Whether to save row or not.*/
+  rowOfInterest = true;
+
     //Following iterates through every object in data-array and returns train number and other data on same level:
-    dataarray.forEach(obj => {
-      if (firstloop) {
-        window['iteratedTableRow'+tableRowNumber] = document.createElement('tr');
-        firstloop = false;
-      }
-      regexPatternForTrainLetters=/^[A-Z]+$/;
-      regexPatternForTrainStations=/^[A-Z]{2,3}\d{1,}$/;
-      //If input array's first entrry is stopping indicator:
-      if (obj == "Yes." || obj=="No.") {
-        //If non-stopping trains have been requested, put stopping indicator to table:
-        if (nonStoppingBoolean) {
-          //Store current object (stopping indicator) in dynamic variable and append it to table row.
+    arrayEntries.forEach(obj => {
+      //If subarray has been marked uninteresting, we may skip it's processing:
+      if (rowOfInterest) {
+        if (firstloop) {
+          //Create new row -element for first row of data:
+          window['iteratedTableRow'+tableRowNumber] = document.createElement('tr');
+          firstloop = false;
+        }
+        regexPatternForTrainLetters=/^[A-Z]+$/;
+        regexPatternForTrainStations=/^[A-Z]{2,3}\d{1,}$/;
+        //If input array's first entrry is stopping indicator:
+        if (obj == "Yes." || obj=="No.") {
+          //If non-stopping trains have been requested, put stopping indicator to table:
+          if (nonStoppingBoolean) {
+            //Store current object (stopping indicator) in dynamic variable and append it to table row.
+            console.log("Nonstoppingboolean triggasi taulukonteossa.")
+            window['iterated'+tableComponentNumber] = document.createElement('td');
+            window['iterated'+tableComponentNumber].textContent = obj;
+            window['iteratedTableRow'+tableRowNumber].appendChild(window['iterated'+tableComponentNumber]);
+            tableComponentNumber +=1;
+            //If non-stopping trains haven't been selected, skip appending this row to tbody:
+          } else if (obj == "No.") {
+            rowOfInterest = false;
+          }
+          //Found guide to following from: https://stackoverflow.com/questions/2831345/is-there-a-way-to-check-if-a-variable-is-a-date-in-javascript
+        } else if (obj instanceof Date) {
+          /*Take hours and minutes, add leading zero to minutes.*/
+          hours = obj.getHours();
+          minutes = obj.getMinutes();
+          //Add leading zero to minutes if minute -value < 10
+          minutes = minutes < 10 ? "0" + minutes : minutes;
+          window['iterated'+tableComponentNumber] = document.createElement('td');
+          window['iterated'+tableComponentNumber].textContent = hours;
+          window['iterated'+tableComponentNumber].textContent += ":"+minutes;
+          window['iteratedTableRow'+tableRowNumber].appendChild(window['iterated'+tableComponentNumber]);
+          tableComponentNumber +=1;
+        } else if (regexPatternForTrainLetters.test(obj)&&obj.length==1) {
           window['iterated'+tableComponentNumber] = document.createElement('td');
           window['iterated'+tableComponentNumber].textContent = obj;
           window['iteratedTableRow'+tableRowNumber].appendChild(window['iterated'+tableComponentNumber]);
           tableComponentNumber +=1;
+        } else if (obj.length >1 && obj.length <4) {
+          window['iterated'+tableComponentNumber] = document.createElement('td');
+          window['iterated'+tableComponentNumber].textContent = obj;
+          window['iteratedTableRow'+tableRowNumber].appendChild(window['iterated'+tableComponentNumber]);
+          tableComponentNumber +=1;
+        } else if (obj == "NEWTRAIN_6b9d87b08a2ee") {
+          TableBody.appendChild(window['iteratedTableRow'+tableRowNumber]);
+          tableRowNumber += 1;
+          window['iteratedTableRow'+tableRowNumber] = document.createElement('tr');
         }
-        //Found guide to following from: https://stackoverflow.com/questions/2831345/is-there-a-way-to-check-if-a-variable-is-a-date-in-javascript
-      } else if (obj instanceof Date) {
-        /*Take hours and minutes, add leading zero to minutes.*/
-        hours = obj.getHours();
-        minutes = obj.getMinutes();
-        //Add leading zero to minutes if minute -value < 10
-        minutes = minutes < 10 ? "0" + minutes : minutes;
-        window['iterated'+tableComponentNumber] = document.createElement('td');
-        window['iterated'+tableComponentNumber].textContent = hours;
-        window['iterated'+tableComponentNumber].textContent += ":"+minutes;
-        window['iteratedTableRow'+tableRowNumber].appendChild(window['iterated'+tableComponentNumber]);
-        dateObjectsAfterStopInfo +=1;
-        tableComponentNumber +=1;
-      } else if (regexPatternForTrainLetters.test(obj)&&obj.length==1) {
-        window['iterated'+tableComponentNumber] = document.createElement('td');
-        window['iterated'+tableComponentNumber].textContent = obj;
-        window['iteratedTableRow'+tableRowNumber].appendChild(window['iterated'+tableComponentNumber]);
-        tableComponentNumber +=1;
-      } else if (obj.length >1 && obj.length <4) {
-        window['iterated'+tableComponentNumber] = document.createElement('td');
-        window['iterated'+tableComponentNumber].textContent = obj;
-        window['iteratedTableRow'+tableRowNumber].appendChild(window['iterated'+tableComponentNumber]);
-        tableComponentNumber +=1;
-      } else if (obj == "NEWTRAIN_6b9d87b08a2ee") {
-        TableBody.appendChild(window['iteratedTableRow'+tableRowNumber]);
-        tableRowNumber += 1;
-        window['iteratedTableRow'+tableRowNumber] = document.createElement('tr');
       }
     });
+    //If subarray had relevant data, append row to table body:
+    if (rowOfInterest) {
+      TableBody.appendChild(window['iteratedTableRow'+tableRowNumber]);
+    }
+    //Increment table row number for next round:
+    tableRowNumber ++;
+    //Create new row element with new number for next line:
+    window['iteratedTableRow'+tableRowNumber] = document.createElement('tr');
+  });
     //Add table body to table:
   Table.appendChild(TableBody);
 

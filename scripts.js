@@ -261,7 +261,7 @@ function datafetch() {
   //When playing with production data, make this function to expect string as input and give that string as parameter to next line instead of sample data.
   
   //Choose sample or production data:
-  fetch('Datasample.json')
+  fetch('Datasample_short.json')
   //fetch(fetchurl);
   
   .then(response => {
@@ -497,15 +497,17 @@ tableRowNumber = 0;
 
 //Used for making new row element at start of loop:
 firstloop = true;
-
+console.log("Loopit alkaa.")
 arrayOfArrays.forEach(arrayEntries => {
   /*Declare variable here, so it provides usable data for
   TableBody.appendChild(window['iteratedTableRow'+tableRowNumber]);
   Whether to save row or not.*/
   rowOfInterest = true;
-
+  arrayEntryNumber = 0;
+  secondDate = false
     //Following iterates through every object in data-array and returns train number and other data on same level:
     arrayEntries.forEach(obj => {
+      console.log(obj);
       //If subarray has been marked uninteresting, we may skip it's processing:
       if (rowOfInterest) {
         if (firstloop) {
@@ -513,25 +515,28 @@ arrayOfArrays.forEach(arrayEntries => {
           window['iteratedTableRow'+tableRowNumber] = document.createElement('tr');
           firstloop = false;
         }
-        regexPatternForTrainLetters=/^[A-Z]+$/;
-        regexPatternForTrainStations=/^[A-Z]{2,3}\d{1,}$/;
-        //If input array's first entrry is stopping indicator:
-        if (obj == "Yes." || obj=="No.") {
-          //If non-stopping trains have been requested, put stopping indicator to table:
+        //Yes/no if non-stopping trains have been selected:
+        if (arrayEntryNumber == 0) {
+          console.log("Ehto 1");
           if (nonStoppingBoolean) {
-            //Store current object (stopping indicator) in dynamic variable and append it to table row.
-            console.log("Nonstoppingboolean triggasi taulukonteossa.")
             window['iterated'+tableComponentNumber] = document.createElement('td');
             window['iterated'+tableComponentNumber].textContent = obj;
             window['iteratedTableRow'+tableRowNumber].appendChild(window['iterated'+tableComponentNumber]);
-            tableComponentNumber +=1;
-            //If non-stopping trains haven't been selected, skip appending this row to tbody:
-          } else if (obj == "No.") {
-            rowOfInterest = false;
+            tableComponentNumber ++;
+          } 
+          arrayEntryNumber ++;
+        } else if (arrayEntryNumber == 1 || secondDate) {
+          //Increment to arrayEntrynumber which sets to 0 on potential second run of this condition:
+          arrayEntryIncrement = 1;
+          //This condition is intended for train times.
+          console.log("Ehto 2");
+          if (secondDate) {
+            //In case this condition is run again by secondDate, set arrayentrynumber 1 step back so remaining conditions can run:
+            arrayEntryIncrement = 0;
+          //if this condition is run again by secondDate, reset it:
+          secondDate = false;
           }
-          //Found guide to following from: https://stackoverflow.com/questions/2831345/is-there-a-way-to-check-if-a-variable-is-a-date-in-javascript
-        } else if (obj instanceof Date) {
-          /*Take hours and minutes, add leading zero to minutes.*/
+
           hours = obj.getHours();
           minutes = obj.getMinutes();
           //Add leading zero to minutes if minute -value < 10
@@ -541,17 +546,22 @@ arrayOfArrays.forEach(arrayEntries => {
           window['iterated'+tableComponentNumber].textContent += ":"+minutes;
           window['iteratedTableRow'+tableRowNumber].appendChild(window['iterated'+tableComponentNumber]);
           tableComponentNumber +=1;
-        } else if (regexPatternForTrainLetters.test(obj)&&obj.length==1) {
+          //Check if next obj is also timestamp:
+          if (arrayEntries[arrayEntryNumber+1] instanceof Date) {
+            console.log("Seuraava entry on date.")
+            secondDate = true;
+          }
+
+          arrayEntryNumber = arrayEntryNumber + arrayEntryIncrement;
+        } else if (arrayEntryNumber > 1 && obj!="NEWTRAIN_6b9d87b08a2ee") {
+          console.log("Ehto 3");
           window['iterated'+tableComponentNumber] = document.createElement('td');
           window['iterated'+tableComponentNumber].textContent = obj;
           window['iteratedTableRow'+tableRowNumber].appendChild(window['iterated'+tableComponentNumber]);
           tableComponentNumber +=1;
-        } else if (obj.length >1 && obj.length <4) {
-          window['iterated'+tableComponentNumber] = document.createElement('td');
-          window['iterated'+tableComponentNumber].textContent = obj;
-          window['iteratedTableRow'+tableRowNumber].appendChild(window['iterated'+tableComponentNumber]);
-          tableComponentNumber +=1;
-        } else if (obj == "NEWTRAIN_6b9d87b08a2ee") {
+          arrayEntryNumber ++;
+        } else {
+          console.log("Ehto 4");
           TableBody.appendChild(window['iteratedTableRow'+tableRowNumber]);
           tableRowNumber += 1;
           window['iteratedTableRow'+tableRowNumber] = document.createElement('tr');

@@ -84,3 +84,56 @@
     
     //console.log("Appendin jälkeen, ennen lisäystä: " + window['iteratedTableRow'+tableRowNum].textContent + "Rnro:" + tableRowNum)
     tableRowNum ++;
+
+    //26.4.2024 OBJ -loop before started developing this by array position:
+          //If subarray has been marked uninteresting, we may skip it's processing:
+          if (rowOfInterest) {
+            if (firstloop) {
+              //Create new row -element for first row of data:
+              window['iteratedTableRow'+tableRowNumber] = document.createElement('tr');
+              firstloop = false;
+            }
+            regexPatternForTrainLetters=/^[A-Z]+$/;
+            regexPatternForTrainStations=/^[A-Z]{2,3}\d{1,}$/;
+            //If input array's first entrry is stopping indicator:
+            if (obj == "Yes." || obj=="No.") {
+              //If non-stopping trains have been requested, put stopping indicator to table:
+              if (nonStoppingBoolean) {
+                //Store current object (stopping indicator) in dynamic variable and append it to table row.
+                console.log("Nonstoppingboolean triggasi taulukonteossa.")
+                window['iterated'+tableComponentNumber] = document.createElement('td');
+                window['iterated'+tableComponentNumber].textContent = obj;
+                window['iteratedTableRow'+tableRowNumber].appendChild(window['iterated'+tableComponentNumber]);
+                tableComponentNumber +=1;
+                //If non-stopping trains haven't been selected, skip appending this row to tbody:
+              } else if (obj == "No.") {
+                rowOfInterest = false;
+              }
+              //Found guide to following from: https://stackoverflow.com/questions/2831345/is-there-a-way-to-check-if-a-variable-is-a-date-in-javascript
+            } else if (obj instanceof Date) {
+              /*Take hours and minutes, add leading zero to minutes.*/
+              hours = obj.getHours();
+              minutes = obj.getMinutes();
+              //Add leading zero to minutes if minute -value < 10
+              minutes = minutes < 10 ? "0" + minutes : minutes;
+              window['iterated'+tableComponentNumber] = document.createElement('td');
+              window['iterated'+tableComponentNumber].textContent = hours;
+              window['iterated'+tableComponentNumber].textContent += ":"+minutes;
+              window['iteratedTableRow'+tableRowNumber].appendChild(window['iterated'+tableComponentNumber]);
+              tableComponentNumber +=1;
+            } else if (regexPatternForTrainLetters.test(obj)&&obj.length==1) {
+              window['iterated'+tableComponentNumber] = document.createElement('td');
+              window['iterated'+tableComponentNumber].textContent = obj;
+              window['iteratedTableRow'+tableRowNumber].appendChild(window['iterated'+tableComponentNumber]);
+              tableComponentNumber +=1;
+            } else if (obj.length >1 && obj.length <4) {
+              window['iterated'+tableComponentNumber] = document.createElement('td');
+              window['iterated'+tableComponentNumber].textContent = obj;
+              window['iteratedTableRow'+tableRowNumber].appendChild(window['iterated'+tableComponentNumber]);
+              tableComponentNumber +=1;
+            } else if (obj == "NEWTRAIN_6b9d87b08a2ee") {
+              TableBody.appendChild(window['iteratedTableRow'+tableRowNumber]);
+              tableRowNumber += 1;
+              window['iteratedTableRow'+tableRowNumber] = document.createElement('tr');
+            }
+          }

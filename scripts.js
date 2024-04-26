@@ -47,8 +47,6 @@ dataarrayStore = []
 
 //Dropdown menu for selecting sorting order:
 var sortorder = document.getElementById("sortSelectionDropdown");
-//console.log(sortorder.value);
-//console.log(sortorder.selectedIndex);
 //Variable to store populatetable's sorting order:
 /*
 0: departures, ascending
@@ -61,6 +59,8 @@ var sortorder = document.getElementById("sortSelectionDropdown");
 //Event handler function calls encapsulated in anymous function calls, so they aren't called automatically every time that page loads:
 //Listener for Dropdown -menu:
 document.getElementById("stationDropDown").addEventListener('change', function() {
+  //Clear also textbox when dropdown is used:
+  document.getElementById("stationsearch").value="";
   lastChanged="dropdown";
   initializeLoad(lastChanged);
 });
@@ -107,9 +107,7 @@ document.getElementById("checkBoxes").addEventListener('click', function() {
 
       //Call checkboxdelay function every 100ms:
       intervalForCheckboxes = setInterval(checkboxdelay,100);
-      //console.log("intervalForCheckboxes after setting: "+ intervalForCheckboxes)
     } else {
-      //console.log("Timeout reset")
       //reset delay back to 1 second:
       checkBoxDelayAmount = initialcheckboxdelay;
     }
@@ -117,26 +115,21 @@ document.getElementById("checkBoxes").addEventListener('click', function() {
 });
 
 function checkboxdelay() {
-  //console.log("Checkbox delay amount at start of checkboxdelay: "+checkBoxDelayAmount)
   if (checkBoxDelayAmount == 100) {
-    //console.log("CheckboxDelayAmount 100")
       //Seems unnecessary: //Set delay to 0, so event listener knows to start new interval in case of checkbox clicks:
       //Seems unnecessary: checkBoxDelayAmount = 0
     //Remove current interval:
     clearInterval(intervalForCheckboxes);
     //This variable gets set to 2 by timer setting, setting this back to 0 enables event listener to start new delay in case of checkbox clicks:
     intervalForCheckboxes = 0;
-    //console.log("intervalForCheckboxes after clearing: "+ intervalForCheckboxes)
     //Initialize loading of data mentioned in dropdown/seachbox:
     initializeLoad(lastChanged);
     //Reset checkbox delay:
     checkBoxDelayAmount = initialcheckboxdelay;
   } else if (checkBoxDelayAmount > 100) {
-    //console.log("CheckboxDelayAmount over 100");
     checkBoxDelayAmount = checkBoxDelayAmount -100;
   } else {
     console.log("Something unplanned on checkboxdelay -function.");
-    //console.log("Checkbox delay amount: "+checkBoxDelayAmount);
   }
 }
 
@@ -230,7 +223,6 @@ function initializeLoad(fromwhere) {
   }
 
   fetchurl = urlbasePerStation+targetStation+arrivedComponent+arrivingComponent+departedComponent+departingComponent+nonstoppingComponent;
-  //console.log(fetchurl)
 
   //In production version, fetchurl goes as datafetch's parameter:
   if (proceed) {
@@ -257,12 +249,12 @@ function checkboxwhitening() {
 
 //Function to actually fetch data from server:
 //Async when fetching from web.
-function datafetch() {
+await function datafetch() {
   //When playing with production data, make this function to expect string as input and give that string as parameter to next line instead of sample data.
   
   //Choose sample or production data:
-  fetch('Datasample_short.json')
-  //fetch(fetchurl);
+  //fetch('Datasample.json')
+  fetch(fetchurl)
   
   .then(response => {
     if (!response.ok) {
@@ -313,7 +305,6 @@ function loadData(inputdata) {
       type = ttrow.type;
       //If station of interest is last, save train letter and destination:
       if (ttrow.stationShortCode == targetStation && timetablerow == obj.timeTableRows.length && savedTimes) {
-        console.log("SaveOnLast triggered")
         saveOnLast = true
       }
       //Station code for comparison below:
@@ -391,10 +382,7 @@ function loadData(inputdata) {
       //Following line is end of ttrow -loop.
     });
   });
-//console.log(timetableEntries)
   //Sort array's contents by time:
-  //This compares every pair of first entries in subarrays.
-  //timetableEntries.sort((a, b) => a[1] - b[1]);
 
   //Make sure that populatetable's dataarrayStore is empty, before it ads current data to it:
   dataarrayStore.length = 0;
@@ -405,7 +393,6 @@ function loadData(inputdata) {
 function populatetable(dataarray) {
   var arrayOfArrays = [];
   if (dataarray[0]=="Sortrequest") {
-    //console.log("Sorting request received");
     //Fill arrayOfArrays with stored data:
     arrayOfArrays = dataarrayStore;
   } else {
@@ -415,9 +402,7 @@ function populatetable(dataarray) {
     subarrays for sorting purposes.*/
     //Split input array to subarrays:
     const separator = "NEWTRAIN_6b9d87b08a2ee"
-    
     var startIndex = 0;
-
     for (var i = 0; i < dataarray.length; i++) {
         if (dataarray[i] === separator) {
             // Slice the flat array from startIndex to i and push it to arrayOfArrays
@@ -429,7 +414,6 @@ function populatetable(dataarray) {
         }
     }
   }
-  console.log(arrayOfArrays[0]);
 //Define where dates are by selections:
   if (departingBoolean) {
     departuresPosition = 1;
@@ -523,7 +507,6 @@ tableRowNumber = 0;
 
 //Used for making new row element at start of loop:
 firstloop = true;
-console.log("Loopit alkaa.")
 arrayOfArrays.forEach(arrayEntries => {
   /*Declare variable here, so it provides usable data for
   TableBody.appendChild(window['iteratedTableRow'+tableRowNumber]);
@@ -534,7 +517,6 @@ arrayOfArrays.forEach(arrayEntries => {
   secondDate = false
     //Following iterates through every object in data-array and returns train number and other data on same level:
     arrayEntries.forEach(obj => {
-      console.log(obj);
       //If subarray has been marked uninteresting, we may skip it's processing:
       if (rowOfInterest) {
         if (firstloop) {
@@ -544,7 +526,6 @@ arrayOfArrays.forEach(arrayEntries => {
         }
         //Yes/no if non-stopping trains have been selected:
         if (arrayEntryNumber == 0) {
-          console.log("Ehto 1");
           if (nonStoppingBoolean) {
             window['iterated'+tableComponentNumber] = document.createElement('td');
             window['iterated'+tableComponentNumber].textContent = obj;
@@ -559,39 +540,43 @@ arrayOfArrays.forEach(arrayEntries => {
           //Increment to arrayEntrynumber which sets to 0 on potential second run of this condition:
           arrayEntryIncrement = 1;
           //This condition is intended for train times.
-          console.log("Ehto 2");
           if (secondDate) {
             //In case this condition is run again by secondDate, set arrayentrynumber 1 step back so remaining conditions can run:
             arrayEntryIncrement = 0;
           //if this condition is run again by secondDate, reset it:
           secondDate = false;
           }
-
-          hours = obj.getHours();
-          minutes = obj.getMinutes();
-          //Add leading zero to minutes if minute -value < 10
-          minutes = minutes < 10 ? "0" + minutes : minutes;
-          window['iterated'+tableComponentNumber] = document.createElement('td');
-          window['iterated'+tableComponentNumber].textContent = hours;
-          window['iterated'+tableComponentNumber].textContent += ":"+minutes;
-          window['iteratedTableRow'+tableRowNumber].appendChild(window['iterated'+tableComponentNumber]);
-          tableComponentNumber +=1;
+          //Make sure at first that this entry is date entry:
+          if (obj instanceof Date) {
+            hours = obj.getHours();
+            minutes = obj.getMinutes();
+            seconds = obj.getSeconds();
+            //Add leading zero to minutes if minute -value < 10
+            minutes = minutes < 10 ? "0" + minutes : minutes;
+            seconds = seconds < 10 ? "0" + seconds : seconds;
+            window['iterated'+tableComponentNumber] = document.createElement('td');
+            window['iterated'+tableComponentNumber].textContent = hours;
+            window['iterated'+tableComponentNumber].textContent += ":"+minutes;
+            window['iterated'+tableComponentNumber].textContent += ":"+seconds;
+            window['iteratedTableRow'+tableRowNumber].appendChild(window['iterated'+tableComponentNumber]);
+            tableComponentNumber +=1;
+          } else { //If second time entry isn't date object and secondDate -statement above has set arrayEntryIncrement to 0, set it back to 1 so function continues on.
+            arrayEntryIncrement = 1;
+          }
           //Check if next obj is also timestamp:
           if (arrayEntries[arrayEntryNumber+1] instanceof Date) {
-            console.log("Seuraava entry on date.")
             secondDate = true;
           }
 
           arrayEntryNumber = arrayEntryNumber + arrayEntryIncrement;
         } else if (rowOfInterest && arrayEntryNumber > 1) {
-          console.log("Ehto 3");
           window['iterated'+tableComponentNumber] = document.createElement('td');
           window['iterated'+tableComponentNumber].textContent = obj;
           window['iteratedTableRow'+tableRowNumber].appendChild(window['iterated'+tableComponentNumber]);
           tableComponentNumber +=1;
           arrayEntryNumber ++;
         } else {
-          console.log("Ehto 4");
+          console.log("Populatetable condition 4 -else. (Shouldn't never appear)");
         }
       }
     });

@@ -89,6 +89,8 @@ radioButtons.forEach(function(radioButton) {
 });
 //Eventlistener to load data when page is loaded:
 document.addEventListener('DOMContentLoaded', () => {
+    //Clear also textbox when page is refreshed/loaded:
+    document.getElementById("stationsearch").value="";
   initializeLoad("dropdown");
 });
 
@@ -111,7 +113,6 @@ document.getElementById("checkBoxes").addEventListener('click', function() {
       //reset delay back to 1 second:
       checkBoxDelayAmount = initialcheckboxdelay;
     }
-
 });
 
 function checkboxdelay() {
@@ -249,12 +250,13 @@ function checkboxwhitening() {
 
 //Function to actually fetch data from server:
 //Async when fetching from web.
-await function datafetch() {
+async function datafetch() {
   //When playing with production data, make this function to expect string as input and give that string as parameter to next line instead of sample data.
-  
+  //console.log(fetchurl);
   //Choose sample or production data:
   //fetch('Datasample.json')
-  fetch(fetchurl)
+  await fetch(fetchurl)
+
   
   .then(response => {
     if (!response.ok) {
@@ -344,9 +346,9 @@ function loadData(inputdata) {
         //var minutes = date.getMinutes();
         timetableEntries.push(arrivalTime);
         if (trackSaver == "Arrival") {
-          if (ttrow.commercialTrack=="") {
+          if (ttrow.commercialTrack.length==0) {
             timetableEntries.push("---");
-          }else {
+          } else {
             timetableEntries.push(ttrow.commercialTrack);
           }
         }
@@ -357,9 +359,9 @@ function loadData(inputdata) {
         var departureTime = new Date(timestamp);
         timetableEntries.push(departureTime);
         if (trackSaver == "Departure") {
-          if (ttrow.commercialTrack=="") {
+          if (ttrow.commercialTrack.length==0) {
             timetableEntries.push("---");
-          }else {
+          } else {
             timetableEntries.push(ttrow.commercialTrack);
           }
         }
@@ -377,6 +379,8 @@ function loadData(inputdata) {
           timetableEntries.push(lastTrainLetter);
         }
         timetableEntries.push(lastTrainDestination);
+        console.log("obj.trainType: "+obj.trainType.value);
+        timetableEntries.push(obj.trainType+obj.trainNumber);
       }
       timetablerow +=1;
       //Following line is end of ttrow -loop.
@@ -464,6 +468,7 @@ if (sortorder.value == 0) {
 
   const TrainLetter = document.createElement("th");
   const TrainDestination = document.createElement("th");
+  const TrainNumber = document.createElement("th");
 
 //Create needed heading -columns to table:
 if (nonStoppingBoolean) {
@@ -494,6 +499,8 @@ TrainLetter.textContent = "Line";
 TrainDestination.textContent ="Destination";
 TableHeadingRow.appendChild(TrainLetter);
 TableHeadingRow.appendChild(TrainDestination);
+TrainNumber.textContent ="Train number";
+TableHeadingRow.appendChild(TrainNumber);
 //Put row created in previous step to table heading -element:
 TableHead.appendChild(TableHeadingRow);
 //Put created table heading -section to table:

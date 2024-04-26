@@ -290,6 +290,14 @@ function loadData(inputdata) {
   lastTrainLetter = "";
   lastTrainDestination ="";
 
+  //Should we take track number from Arrival or departure data reading:
+  if (arrivingBoolean) {
+    trackSaver="Arrival";
+  }
+  if (departingBoolean) {
+    trackSaver="Departure";
+  }
+
   inputdata.forEach(obj => {
     //Following integer helps timetablerows to recognize, if it's last run or not, so those train letters and destinations come to even last entries:
     //length starts from 1.
@@ -344,12 +352,26 @@ function loadData(inputdata) {
         //var hours = date.getHours();
         //var minutes = date.getMinutes();
         timetableEntries.push(arrivalTime);
+        if (trackSaver == "Arrival") {
+          if (ttrow.commercialTrack=="") {
+            timetableEntries.push("---");
+          }else {
+            timetableEntries.push(ttrow.commercialTrack);
+          }
+        }
         lastStation = currentStation;
         savedTimes = true;
       } else if (departingBoolean && currentStation == targetStation && type == "DEPARTURE") {
         timestamp = ttrow.scheduledTime;
         var departureTime = new Date(timestamp);
         timetableEntries.push(departureTime);
+        if (trackSaver == "Departure") {
+          if (ttrow.commercialTrack=="") {
+            timetableEntries.push("---");
+          }else {
+            timetableEntries.push(ttrow.commercialTrack);
+          }
+        }
         lastStation = currentStation;
         savedTimes = true;
       }
@@ -407,6 +429,7 @@ function populatetable(dataarray) {
         }
     }
   }
+  console.log(arrayOfArrays[0]);
 //Define where dates are by selections:
   if (departingBoolean) {
     departuresPosition = 1;
@@ -453,6 +476,7 @@ if (sortorder.value == 0) {
   const ArrivingTime = document.createElement('th');
   //const DepartedTime = document.createElement('th');
   const DepartureTime = document.createElement('th');
+  const TrackNumber = document.createElement('th');
 
   const TrainLetter = document.createElement("th");
   const TrainDestination = document.createElement("th");
@@ -479,6 +503,8 @@ if (departingBoolean) {
   DepartureTime.textContent ="Departure";
   TableHeadingRow.appendChild(DepartureTime);
 }
+TrackNumber.textContent ="Track";
+TableHeadingRow.appendChild(TrackNumber);
 
 TrainLetter.textContent = "Line";
 TrainDestination.textContent ="Destination";
@@ -502,6 +528,7 @@ arrayOfArrays.forEach(arrayEntries => {
   /*Declare variable here, so it provides usable data for
   TableBody.appendChild(window['iteratedTableRow'+tableRowNumber]);
   Whether to save row or not.*/
+  //Solely rowOfInterest is used to keep non-stopping trains away from table if they haven't been requested.
   rowOfInterest = true;
   arrayEntryNumber = 0;
   secondDate = false
@@ -523,9 +550,12 @@ arrayOfArrays.forEach(arrayEntries => {
             window['iterated'+tableComponentNumber].textContent = obj;
             window['iteratedTableRow'+tableRowNumber].appendChild(window['iterated'+tableComponentNumber]);
             tableComponentNumber ++;
-          } 
+          } else if (obj == "No.") {
+            //If non-stopping trains haven't requested and stop -indicator is "No." skip that entry.
+            rowOfInterest = false;
+          }
           arrayEntryNumber ++;
-        } else if (arrayEntryNumber == 1 || secondDate) {
+        } else if (rowOfInterest && arrayEntryNumber == 1 || secondDate) {
           //Increment to arrayEntrynumber which sets to 0 on potential second run of this condition:
           arrayEntryIncrement = 1;
           //This condition is intended for train times.
@@ -553,7 +583,7 @@ arrayOfArrays.forEach(arrayEntries => {
           }
 
           arrayEntryNumber = arrayEntryNumber + arrayEntryIncrement;
-        } else if (arrayEntryNumber > 1 && obj!="NEWTRAIN_6b9d87b08a2ee") {
+        } else if (rowOfInterest && arrayEntryNumber > 1) {
           console.log("Ehto 3");
           window['iterated'+tableComponentNumber] = document.createElement('td');
           window['iterated'+tableComponentNumber].textContent = obj;
@@ -562,9 +592,6 @@ arrayOfArrays.forEach(arrayEntries => {
           arrayEntryNumber ++;
         } else {
           console.log("Ehto 4");
-          TableBody.appendChild(window['iteratedTableRow'+tableRowNumber]);
-          tableRowNumber += 1;
-          window['iteratedTableRow'+tableRowNumber] = document.createElement('tr');
         }
       }
     });

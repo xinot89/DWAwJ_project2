@@ -1,6 +1,63 @@
 /* Aletaan pusertamaan seuraavalla eteenpäin:
 https://www.digitraffic.fi/en/railway-traffic/
+
+Finnish documentation:
+https://www.digitraffic.fi/rautatieliikenne/
+
+Train types:
+https://rata.digitraffic.fi/api/v1/metadata/train-types
+
+Station codes:
+https://rata.digitraffic.fi/api/v1/metadata/stations
 */
+
+//Eventlistener to load data when page is loaded:
+document.addEventListener('DOMContentLoaded', () => {
+  //Clear also textbox when page is refreshed/loaded:
+  document.getElementById("stationsearch").value="";
+initializeLoad("dropdown");
+});
+
+
+/*Original event handlers, issue with these was that they called configured function every time page loaded.
+//Event listeners for station dropdown -menu and search without setting constants:
+document.getElementById("stationDropDown").addEventListener('onchange', initializeLoad("dropdown"));
+document.getElementById("stationSearchButton").addEventListener('click', initializeLoad("searchbutton"));
+*/
+//Event handler function calls encapsulated in anymous function calls, so they aren't called automatically every time that page loads:
+//Listener for Dropdown -menu:
+document.getElementById("stationDropDown").addEventListener('change', function() {
+  //Clear also textbox when dropdown is used:
+  document.getElementById("stationsearch").value="";
+  lastChanged="dropdown";
+  initializeLoad(lastChanged);
+});
+//Listener for search -box:
+document.getElementById("stationSearchButton").addEventListener('click', function() {
+  lastChanged="searchbutton";
+  initializeLoad(lastChanged);
+});
+
+//Event listener for dropdown menu to make populatetable sort entries again:
+//Sets also sortorder back to departures, for example in case of trying to sort with arrivals with only departures selected.
+//(And other way around)
+document.getElementById("sortSelectionDropdown").addEventListener('change', function() {
+  if (-1 < sortorder.value && sortorder.value < 2 && departingBoolean == false) {
+    sortorder.selectedIndex = 2;
+  } else if (sortorder.value > 1 && sortorder.value < 4 && arrivingBoolean == false) {
+    sortorder.selectedIndex = 0;
+  }
+  populatetable(["Sortrequest"])
+});
+
+//Event listener for radio buttons:
+var radioButtons = document.getElementsByName("howManyToFetch");
+radioButtons.forEach(function(radioButton) {
+  radioButton.addEventListener('click', function() {
+    initializeLoad(lastChanged);
+  });
+});
+
 /*I used https://jshint.com/ for additional checking of code, this is to tell checker that my code is using functionalities from EcmaScript 6:*/
 /*jshint esversion: 6 */
 
@@ -14,11 +71,7 @@ var -available throught the function in which they're declared
 https://sentry.io/answers/difference-between-let-and-var-in-javascript/
 */
 
-/*Original event handlers, issue with these was that they called configured function every time page loaded.
-//Event listeners for station dropdown -menu and search without setting constants:
-document.getElementById("stationDropDown").addEventListener('onchange', initializeLoad("dropdown"));
-document.getElementById("stationSearchButton").addEventListener('click', initializeLoad("searchbutton"));
-*/
+
 
 //Initialize targetStation -variable here, so it can be used on all functions.
 targetStation = "";
@@ -55,44 +108,6 @@ var sortorder = document.getElementById("sortSelectionDropdown");
 3: arrivals, descending */
 //Original sortorder -variable before dropdown:
 //sortorder = 0;
-
-//Event handler function calls encapsulated in anymous function calls, so they aren't called automatically every time that page loads:
-//Listener for Dropdown -menu:
-document.getElementById("stationDropDown").addEventListener('change', function() {
-  //Clear also textbox when dropdown is used:
-  document.getElementById("stationsearch").value="";
-  lastChanged="dropdown";
-  initializeLoad(lastChanged);
-});
-
-//Event listener for dropdown menu to make populatetable sort entries again:
-//Sets also sortorder back to ex. departures, trying to sort with arrivals with only departures selected.
-document.getElementById("sortSelectionDropdown").addEventListener('change', function() {
-  if (-1 < sortorder.value && sortorder.value < 2 && departingBoolean == false) {
-    sortorder.selectedIndex = 2;
-  } else if (sortorder.value > 1 && sortorder.value < 4 && arrivingBoolean == false) {
-    sortorder.selectedIndex = 0;
-  }
-  populatetable(["Sortrequest"])
-});
-//Listener for search -box:
-document.getElementById("stationSearchButton").addEventListener('click', function() {
-  lastChanged="searchbutton";
-  initializeLoad(lastChanged);
-});
-//Event listener for radio buttons:
-var radioButtons = document.getElementsByName("howManyToFetch");
-radioButtons.forEach(function(radioButton) {
-  radioButton.addEventListener('click', function() {
-    initializeLoad(lastChanged);
-  });
-});
-//Eventlistener to load data when page is loaded:
-document.addEventListener('DOMContentLoaded', () => {
-    //Clear also textbox when page is refreshed/loaded:
-    document.getElementById("stationsearch").value="";
-  initializeLoad("dropdown");
-});
 
 //Variable where if statement can check if interval is already running:
 let intervalForCheckboxes = 0;
@@ -294,10 +309,10 @@ function loadData(inputdata) {
   delayedDepartureTime=0;
 
   //Should we take track number from Arrival or departure data reading:
+  //Modification 28.4.2024: Instead of 2 single if statemets, now only 1 combined.
   if (arrivingBoolean) {
     trackSaver="Arrival";
-  }
-  if (departingBoolean) {
+  } else if (departingBoolean) {
     trackSaver="Departure";
   }
 
@@ -338,9 +353,12 @@ function loadData(inputdata) {
       if (lastStation==targetStation && currentStation != targetStation) {
         targetStationPassed = true;
       }
-      //For each timetablerow, we first check that is this continuing old entry or completely new entry.
+      //For each timetablerow, we first check that is this continuing old entry (savedTimes already present.
+      //Or completely new entry. lastStation != currentStation is for recognizing that all times for
+      //target station are recorded and we can continue putting track, line-id, destination and train-id to array.
       if (savedTimes && lastStation != currentStation) {
         if (targetStationPassed) {
+          //Reset targetStationPassed for next use:
           targetStationPassed = false;
           //If departure is wanted, but not collected:
           if (departingBoolean) {
@@ -412,7 +430,7 @@ function loadData(inputdata) {
         lacksDeparture = false;
         if (trackSaver == "Departure") {
           if (ttrow.commercialTrack.length==0) {
-            lastCommercialTrack="-DeTrack--";
+            lastCommercialTrack="n/a";
             //timetableEntries.push("---");
           } else {
             lastCommercialTrack = ttrow.commercialTrack;
@@ -469,7 +487,7 @@ function populatetable(dataarray) {
         }
     }
   }
-  
+/*
 console.log(arrayOfArrays[0]);
 console.log(arrayOfArrays[1]);
 console.log(arrayOfArrays[2]);
@@ -481,6 +499,7 @@ console.log(arrayOfArrays[7]);
 console.log(arrayOfArrays[8]);
 console.log(arrayOfArrays[9]);
 console.log(arrayOfArrays[10]);
+*/
 
 //Define where dates are by selections:
   if (departingBoolean) {

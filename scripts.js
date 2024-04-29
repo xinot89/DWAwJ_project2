@@ -360,6 +360,9 @@ function loadData(inputdata) {
       currentStation = ttrow.stationShortCode;
       //check if target station is passed:
       if (lastStation==targetStation && currentStation != targetStation) {
+        /*Resetting also stopping indicator as train might stop multiple times on same station.
+        One example of this is T2241 which departs from Kouvola, goes to Kouvola tavara and then back to Kouvola.*/
+        stoppingIndicatorNotInserted = true;
         targetStationPassed = true;
       }
       /*
@@ -435,7 +438,7 @@ function loadData(inputdata) {
         lacksArrival = false;
         if (trackSaver == "Arrival") {
           if (ttrow.commercialTrack.length==0) {
-            lastCommercialTrack="n/a (A)";
+            lastCommercialTrack="n/a";
           } else {
             lastCommercialTrack = ttrow.commercialTrack;
             //lastCommercialTrack = 20;
@@ -464,7 +467,7 @@ function loadData(inputdata) {
         lacksDeparture = false;
         if (trackSaver == "Departure") {
           if (ttrow.commercialTrack.length==0) {
-            lastCommercialTrack="n/a (D)";
+            lastCommercialTrack="n/a";
           } else {
             lastCommercialTrack = ttrow.commercialTrack;
             //timetableEntries.push(ttrow.commercialTrack);

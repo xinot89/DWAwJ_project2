@@ -303,7 +303,9 @@ function loadData(inputdata) {
   lastTrainLetter = "";
   lastTrainDestination ="";
   lastCommercialTrack = 0;
-  lastTrainTypeAndNumber="";
+  //lastTrainTypeAndNumber="";
+  lastTrainType="";
+  lastTrainNumber="";
   //Variables to store arrival and departure times until target station has passed, so we know whether to put real times in array or n/a:
   var delayedArrivalTime=null;
   var delayedDepartureTime=null;
@@ -345,7 +347,9 @@ function loadData(inputdata) {
     lastTrainLetter = obj.commuterLineID;
     lastTrainDestination = obj.timeTableRows[obj.timeTableRows.length-1].stationShortCode;
     //console.log("obj trainnumber: "+obj.trainNumber);
-    lastTrainTypeAndNumber = obj.trainType+obj.trainNumber;
+    //lastTrainTypeAndNumber = obj.trainType+obj.trainNumber;
+    lastTrainType = obj.trainType;
+    lastTrainNumber = obj.trainNumber;
 
     obj.timeTableRows.forEach(ttrow => {
 
@@ -404,13 +408,15 @@ function loadData(inputdata) {
         //Save last train letter and destination only if there has been previous run.
         if (lastStation.length >0) {
           if (lastTrainLetter.length == 0) {
-            timetableEntries.push("No ID");
+            timetableEntries.push("-");
           } else {
             timetableEntries.push(lastTrainLetter);
           }
           timetableEntries.push(lastTrainDestination);
         }
-        timetableEntries.push(lastTrainTypeAndNumber);
+        //timetableEntries.push(lastTrainTypeAndNumber);
+        timetableEntries.push(lastTrainType);
+        timetableEntries.push(lastTrainNumber);
         //Save separator to array:
         timetableEntries.push("NEWTRAIN_6b9d87b08a2ee")
         savedTimes = false;
@@ -520,13 +526,15 @@ function loadData(inputdata) {
       //Save last train letter and destination only if there has been previous run.
       if (lastStation.length >0) {
         if (lastTrainLetter.length == 0) {
-          timetableEntries.push("No ID");
+          timetableEntries.push("-");
         } else {
           timetableEntries.push(lastTrainLetter);
         }
         timetableEntries.push(lastTrainDestination);
       }
-      timetableEntries.push(lastTrainTypeAndNumber);
+      //timetableEntries.push(lastTrainTypeAndNumber);
+      timetableEntries.push(lastTrainType);
+      timetableEntries.push(lastTrainNumber);
       //Save separator to array:
       timetableEntries.push("NEWTRAIN_6b9d87b08a2ee")
       savedTimes = false;
@@ -568,19 +576,6 @@ function populatetable(dataarray) {
         }
     }
   }
-/*
-console.log(arrayOfArrays[0]);
-console.log(arrayOfArrays[1]);
-console.log(arrayOfArrays[2]);
-console.log(arrayOfArrays[3]);
-console.log(arrayOfArrays[4]);
-console.log(arrayOfArrays[5]);
-console.log(arrayOfArrays[6]);
-console.log(arrayOfArrays[7]);
-console.log(arrayOfArrays[8]);
-console.log(arrayOfArrays[9]);
-console.log(arrayOfArrays[10]);
-*/
 
 //Define where dates are by selections:
   if (departingBoolean) {
@@ -679,8 +674,6 @@ tableRowNumber = 0;
 
 //Used for making new row element at start of loop:
 firstloop = true;
-//Take samples from obj:s for debugging:
-samples = 0;
 arrayOfArrays.forEach(arrayEntries => {
   //Debug array output 29.4.2024:
   if (arrayEntries.includes("IC68") || arrayEntries.includes("IC69") ||arrayEntries.includes("IC70")) {
@@ -696,11 +689,6 @@ arrayOfArrays.forEach(arrayEntries => {
   secondDate = false
     //Following iterates through every object in data-array and returns train number and other data on same level:
     arrayEntries.forEach(obj => {
-      if (samples >0) {
-        console.log(obj);
-        samples--;
-      }
-
       //If subarray has been marked uninteresting, we may skip it's processing:
       if (rowOfInterest) {
         if (firstloop) {
@@ -744,8 +732,7 @@ arrayOfArrays.forEach(arrayEntries => {
             window['iterated'+tableComponentNumber].textContent += ":"+seconds;
             window['iteratedTableRow'+tableRowNumber].appendChild(window['iterated'+tableComponentNumber]);
             tableComponentNumber +=1;
-          } // KIRJOITA TÄHÄN MYÖS ELSE IF, JOKA PÄÄSTÄÄ TEKSTUAALISEN SISÄLLÖN LÄPI, JOS ENSIMMÄINEN AIKA EI OLE DATE OBJECT.
-          else {
+          } else {
             //If second time entry isn't date object and secondDate -statement above has set arrayEntryIncrement to 0, set it back to 1 so function continues on.
             //Cleans also trains from terminal stations, which have only arrival/departure time, in case of opposite is selected.
             //console.log("populatetable hit non-date mark on date field");
@@ -762,7 +749,6 @@ arrayOfArrays.forEach(arrayEntries => {
           if (arrayEntries[arrayEntryNumber+1] instanceof Date) {
             secondDate = true;
           }
-
           arrayEntryNumber = arrayEntryNumber + arrayEntryIncrement;
         } else if (rowOfInterest && arrayEntryNumber > 1) {
           window['iterated'+tableComponentNumber] = document.createElement('td');

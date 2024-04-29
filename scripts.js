@@ -675,10 +675,11 @@ tableRowNumber = 0;
 //Used for making new row element at start of loop:
 firstloop = true;
 arrayOfArrays.forEach(arrayEntries => {
+  let entryCount = arrayEntries.length;
   //Debug array output 29.4.2024:
-  if (arrayEntries.includes("IC68") || arrayEntries.includes("IC69") ||arrayEntries.includes("IC70")) {
-  console.log("Arrayentry populatetablessa:" +arrayEntries);
-}
+  if (arrayEntries.includes("JNS") || arrayEntries.includes("KV")) {
+    console.log("Arrayentry populatetablessa:" +arrayEntries);
+  }
 
   /*Declare variable here, so it provides usable data for
   TableBody.appendChild(window['iteratedTableRow'+tableRowNumber]);
@@ -708,15 +709,16 @@ arrayOfArrays.forEach(arrayEntries => {
             rowOfInterest = false;
           }
           arrayEntryNumber ++;
-        } else if (rowOfInterest && arrayEntryNumber == 1 || secondDate) {
+        } else if (rowOfInterest && arrayEntryNumber == 1 || arrayEntryNumber == 2 && secondDate) {
           //Increment to arrayEntrynumber which sets to 0 on potential second run of this condition:
-          arrayEntryIncrement = 1;
+          //arrayEntryIncrement = 1;
           //This condition is intended for train times.
           if (secondDate) {
             //In case this condition is run again by secondDate, set arrayentrynumber 1 step back so remaining conditions can run:
-            arrayEntryIncrement = 0;
-          //if this condition is run again by secondDate, reset it:
-          secondDate = false;
+            //arrayEntryIncrement = 0;
+            //arrayEntryNumber--;
+            //if this condition is run again by secondDate, reset it:
+            secondDate = false;
           }
           //Make sure at first that this entry is date entry:
           if (obj instanceof Date) {
@@ -743,22 +745,42 @@ arrayOfArrays.forEach(arrayEntries => {
             window['iterated'+tableComponentNumber].textContent = obj;
             window['iteratedTableRow'+tableRowNumber].appendChild(window['iterated'+tableComponentNumber]);
             tableComponentNumber +=1;
-            arrayEntryIncrement = 1;
+            //arrayEntryIncrement = 1;
           }
           //Check if next obj is also timestamp:
           if (arrayEntries[arrayEntryNumber+1] instanceof Date) {
             secondDate = true;
           }
-          arrayEntryNumber = arrayEntryNumber + arrayEntryIncrement;
+          //arrayEntryNumber = arrayEntryNumber + arrayEntryIncrement;
+          arrayEntryNumber++;
         } else if (rowOfInterest && arrayEntryNumber > 1) {
-          window['iterated'+tableComponentNumber] = document.createElement('td');
-          window['iterated'+tableComponentNumber].textContent = obj;
-          window['iteratedTableRow'+tableRowNumber].appendChild(window['iterated'+tableComponentNumber]);
-          tableComponentNumber +=1;
+          if (arrayEntryNumber == entryCount-2) {
+            //Second last cell (Train type)
+            //Create cell:
+            window['iterated'+tableComponentNumber] = document.createElement('td');
+            //Put array position's contents into cell:
+            window['iterated'+tableComponentNumber].textContent = obj;
+            //Pause incrementing of tableComponentNumber so train number comes into same cell:
+            //tableComponentNumberIncrement = 0;
+            //Take 1 back of tablecomponentnumber, so when it gets additioned after these statements, it remains same for else if below.
+            //This could probably also be made by using -1 on tablecomponentnumber below.
+            tableComponentNumber --;
+          } else if (arrayEntryNumber == entryCount-1) {
+            //Last cell (Train number)
+            window['iterated'+tableComponentNumber].textContent += obj;
+            window['iteratedTableRow'+tableRowNumber].appendChild(window['iterated'+tableComponentNumber]);
+            //tableComponentNumberIncrement = 1;
+          } else {
+            window['iterated'+tableComponentNumber] = document.createElement('td');
+            window['iterated'+tableComponentNumber].textContent = obj;
+            window['iteratedTableRow'+tableRowNumber].appendChild(window['iterated'+tableComponentNumber]);
+          }
           arrayEntryNumber ++;
         } else {
           console.log("Populatetable condition 4 (Else. Shouldn't never appear)");
         }
+        //tableComponentNumber = tableComponentNumber + tableComponentNumberIncrement;
+        tableComponentNumber++;
       }
     });
     //If subarray had relevant data, append row to table body:

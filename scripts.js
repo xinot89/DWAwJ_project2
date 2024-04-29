@@ -305,11 +305,12 @@ function loadData(inputdata) {
   lastCommercialTrack = 0;
   lastTrainTypeAndNumber="";
   //Variables to store arrival and departure times until target station has passed, so we know whether to put real times in array or n/a:
-  delayedArrivalTime=0;
-  delayedDepartureTime=0;
+  var delayedArrivalTime=null;
+  var delayedDepartureTime=null;
 
   //Should we take track number from Arrival or departure data reading:
   //Modification 28.4.2024: Instead of 2 single if statemets, now only 1 combined.
+  //Both should yield same result point is not to get 2 track entries on array.
   if (arrivingBoolean) {
     trackSaver="Arrival";
   } else if (departingBoolean) {
@@ -317,9 +318,19 @@ function loadData(inputdata) {
   }
 
   inputdata.forEach(obj => {
+    //These variables are for mechanism to insert "---" in case of no departure entries and such:
+    lacksArrival = true;
+    lacksDeparture = true;
+    //Indicator for previous if target station has passed:
+    targetStationPassed = false;
+
     //Following integer helps timetablerows to recognize, if it's last run or not, so those train letters and destinations come to even last entries:
-    //length starts from 1.
+    //length starts from 1, so this is set to match it. Needs to be inside train loop that this gets resetted on every train.
     timetablerow = 1;
+
+    //Following boolean is for Arrival/departure -time getting block so that they set saveonlast if loop is handling train's last timetable row:
+    lastTimeTableRow = false;
+
     //variable which makes loop save train letter and destination to last entry:
     saveOnLast = false;
     //Variable to indicate if there is saved times at array so we won't get excess train letters and destinations in array:
@@ -327,11 +338,8 @@ function loadData(inputdata) {
     //Variable to set boolean value on each train if there's stop on targetStation.
     stoppingIndicatorNotInserted = true;
     //console.log(obj.trainNumber);
-    //These variables are for mechanism to insert "---" in case of no departure entries and such:
-    lacksArrival = true;
-    lacksDeparture = true;
-    //Indicator for previous if target station has passed:
-    targetStationPassed = false;
+
+    //Moved lacksArrival, lacksDeparture and targetStationPassed from here to train's loop.
 
     //Moved from inner loop:
     lastTrainLetter = obj.commuterLineID;
@@ -340,39 +348,51 @@ function loadData(inputdata) {
     lastTrainTypeAndNumber = obj.trainType+obj.trainNumber;
 
     obj.timeTableRows.forEach(ttrow => {
-      
+
       //Define timetable event type:
       type = ttrow.type;
       //If station of interest is last, use save functionality after all if clauses instead of next round's.
-      if (ttrow.stationShortCode == targetStation && timetablerow == obj.timeTableRows.length && savedTimes) {
-        saveOnLast = true
+      if (ttrow.stationShortCode == targetStation && timetablerow == obj.timeTableRows.length) {
+        lastTimeTableRow = true;
       }
+
+
       //Station code for comparison below:
       currentStation = ttrow.stationShortCode;
       //check if target station is passed:
       if (lastStation==targetStation && currentStation != targetStation) {
         targetStationPassed = true;
       }
-      //For each timetablerow, we first check that is this continuing old entry (savedTimes already present.
-      //Or completely new entry. lastStation != currentStation is for recognizing that all times for
-      //target station are recorded and we can continue putting track, line-id, destination and train-id to array.
+      /*
+      For each timetablerow, we first check that is this continuing old entry (savedTimes already present.
+      or completely new entry. "lastStation != currentStation" is for recognizing that all times for
+      target station are recorded and we can continue putting track, line-id, destination and train-id to array.
+      Edit 28.4.2024: May cause glitches for table rendering if timetable includes target station twice.
+      Problems especially with station "KV", train T2241, T2813 and T31206 when both, arrivals and departure is selected. 
+      */
       if (savedTimes && lastStation != currentStation) {
         if (targetStationPassed) {
           //Reset targetStationPassed for next use:
           targetStationPassed = false;
-          //If departure is wanted, but not collected:
+          //Put "Not available" -entry to array if arrival/departure time is not available:
+          if (arrivingBoolean) {
+            if (lacksArrival) {
+              if (timetablerow == 2) {
+                timetableEntries.push("Line start")
+              } else {
+                timetableEntries.push("Arrival n/a");
+              }
+            } else {
+              timetableEntries.push(delayedArrivalTime);
+              delayedArrivalTime=null;
+            }
+          }
           if (departingBoolean) {
             if (lacksDeparture) {
               timetableEntries.push("Departure n/a");
             } else {
             timetableEntries.push(delayedDepartureTime);
-            }
-          }
-          if (arrivingBoolean) {
-            if (lacksArrival) {
-              timetableEntries.push("Arrival n/a");
-            } else {
-              timetableEntries.push(delayedArrivalTime);
+            delayedDepartureTime=null;
             }
           }
           if (trackSaver == "Departure" || trackSaver == "Arrival") {
@@ -403,18 +423,19 @@ function loadData(inputdata) {
         }
       }
       if (arrivingBoolean && currentStation == targetStation && type == "ARRIVAL") {
+        console.log
         //Get timedata from JSON to variable:
         timestamp = ttrow.scheduledTime;
         //Make new date object out of it, date object usage also automatically converts time to local time.:
         //Date object is milliseconds since epoch, so it's easy to compare
-        var arrivalTime = new Date(timestamp);
-        delayedArrivalTime = arrivalTime;
+        delayedArrivalTime = new Date(timestamp);
+        //console.log(lastTrainTypeAndNumber+" Arrival time at targetstation: "+arrivalTime.getHours()+":"+arrivalTime.getMinutes());
+        //Moved to setting date object directly to used variable 29.4.2024, 9:34. was:delayedArrivalTime = arrivalTime;
         
         lacksArrival = false;
         if (trackSaver == "Arrival") {
           if (ttrow.commercialTrack.length==0) {
-            lastCommercialTrack="-ArTrack--";
-            //timetableEntries.push("---");
+            lastCommercialTrack="n/a (A)";
           } else {
             lastCommercialTrack = ttrow.commercialTrack;
             //lastCommercialTrack = 20;
@@ -423,15 +444,18 @@ function loadData(inputdata) {
         }
         lastStation = currentStation;
         savedTimes = true;
+        if (lastTimeTableRow) {
+          saveOnLast = true;
+        }
       } else if(departingBoolean && currentStation == targetStation && type == "DEPARTURE") {
         timestamp = ttrow.scheduledTime;
-        var departureTime = new Date(timestamp);
-        delayedDepartureTime = departureTime;
+        delayedDepartureTime = new Date(timestamp);
+        //console.log(lastTrainTypeAndNumber+" Departure time at targetstation: "+departureTime.getHours()+":"+departureTime.getMinutes());
+        //Moved to setting date object directly to used variable 29.4.2024, 9:34. was:delayedDepartureTime = departureTime;
         lacksDeparture = false;
         if (trackSaver == "Departure") {
           if (ttrow.commercialTrack.length==0) {
-            lastCommercialTrack="n/a";
-            //timetableEntries.push("---");
+            lastCommercialTrack="n/a (D)";
           } else {
             lastCommercialTrack = ttrow.commercialTrack;
             //timetableEntries.push(ttrow.commercialTrack);
@@ -439,17 +463,61 @@ function loadData(inputdata) {
         }
         lastStation = currentStation;
         savedTimes = true;
+        if (lastTimeTableRow) {
+          saveOnLast = true;
+        }
       } 
+      if (obj.trainNumber == 233 && timetablerow > 60) {
+        //Debug.
+        //console.log("Train 233 timetablerow: " + timetablerow);
+        //console.log("Train 233 timetablerows length: " + obj.timeTableRows.length);
+        console.log("Train 233 savedtimes: " + savedTimes);
+        console.log("Train 233 saveonlast: " + saveOnLast);
+      }
 
-      if (saveOnLast && savedTimes) {
-        //This statement is to save terminal station's times if there's no more timetable entries.
+      if (saveOnLast && savedTimes) {        
+        if (targetStationPassed) {
+        //Reset targetStationPassed for next use:
+        targetStationPassed = false;
+        //Put "Not available" -entry to array if arrival/departure time is not available:
+        if (arrivingBoolean) {
+          if (lacksArrival) {
+            timetableEntries.push("Arrival n/a");
+          } else {
+            timetableEntries.push(delayedArrivalTime);
+            delayedArrivalTime=null;
+          }
+        }
+        if (departingBoolean) {
+          if (lacksDeparture) {
+            if (lastTimeTableRow) {
+              timetableEntries.push("Terminates")
+            } else {
+              timetableEntries.push("Departure n/a");
+            }
+          } else {
+          timetableEntries.push(delayedDepartureTime);
+          delayedDepartureTime=null;
+          }
+        }
+        if (trackSaver == "Departure" || trackSaver == "Arrival") {
+          timetableEntries.push(lastCommercialTrack);
+        }
+      }        
+      //Save last train letter and destination only if there has been previous run.
+      if (lastStation.length >0) {
         if (lastTrainLetter.length == 0) {
-          timetableEntries.push("---");
+          timetableEntries.push("No ID");
         } else {
           timetableEntries.push(lastTrainLetter);
         }
         timetableEntries.push(lastTrainDestination);
-        timetableEntries.push(lastTrainTypeAndNumber);
+      }
+      timetableEntries.push(lastTrainTypeAndNumber);
+      //Save separator to array:
+      timetableEntries.push("NEWTRAIN_6b9d87b08a2ee")
+      savedTimes = false;
+      lastTimeTableRow = false;
       }
       timetablerow +=1;
       //Following line is end of ttrow -loop.
@@ -601,6 +669,11 @@ firstloop = true;
 //Take samples from obj:s for debugging:
 samples = 0;
 arrayOfArrays.forEach(arrayEntries => {
+  //Debug array output 29.4.2024:
+  if (arrayEntries.includes("HL1670")) {
+  console.log("Arrayentry populatetablessa:" +arrayEntries);
+}
+
   /*Declare variable here, so it provides usable data for
   TableBody.appendChild(window['iteratedTableRow'+tableRowNumber]);
   Whether to save row or not.*/
@@ -614,6 +687,7 @@ arrayOfArrays.forEach(arrayEntries => {
         console.log(obj);
         samples--;
       }
+
       //If subarray has been marked uninteresting, we may skip it's processing:
       if (rowOfInterest) {
         if (firstloop) {
@@ -657,11 +731,18 @@ arrayOfArrays.forEach(arrayEntries => {
             window['iterated'+tableComponentNumber].textContent += ":"+seconds;
             window['iteratedTableRow'+tableRowNumber].appendChild(window['iterated'+tableComponentNumber]);
             tableComponentNumber +=1;
-          } else {
+          } // KIRJOITA TÄHÄN MYÖS ELSE IF, JOKA PÄÄSTÄÄ TEKSTUAALISEN SISÄLLÖN LÄPI, JOS ENSIMMÄINEN AIKA EI OLE DATE OBJECT.
+          else {
             //If second time entry isn't date object and secondDate -statement above has set arrayEntryIncrement to 0, set it back to 1 so function continues on.
             //Cleans also trains from terminal stations, which have only arrival/departure time, in case of opposite is selected.
             //console.log("populatetable hit non-date mark on date field");
-            rowOfInterest = false;
+            //rowOfInterest = false;
+
+            //refactoring of this else statement 29.4.2024:
+            window['iterated'+tableComponentNumber] = document.createElement('td');
+            window['iterated'+tableComponentNumber].textContent = obj;
+            window['iteratedTableRow'+tableRowNumber].appendChild(window['iterated'+tableComponentNumber]);
+            tableComponentNumber +=1;
             arrayEntryIncrement = 1;
           }
           //Check if next obj is also timestamp:
@@ -677,7 +758,7 @@ arrayOfArrays.forEach(arrayEntries => {
           tableComponentNumber +=1;
           arrayEntryNumber ++;
         } else {
-          console.log("Populatetable condition 4 -else. (Shouldn't never appear)");
+          console.log("Populatetable condition 4 (Else. Shouldn't never appear)");
         }
       }
     });

@@ -356,7 +356,6 @@ function loadData(inputdata) {
         lastTimeTableRow = true;
       }
 
-
       //Station code for comparison below:
       currentStation = ttrow.stationShortCode;
       //check if target station is passed:
@@ -413,17 +412,18 @@ function loadData(inputdata) {
         timetableEntries.push("NEWTRAIN_6b9d87b08a2ee")
         savedTimes = false;
       }
-      if (currentStation == targetStation && stoppingIndicatorNotInserted) {
-        if (ttrow.commercialStop) {
-          timetableEntries.push("Yes.");
-          stoppingIndicatorNotInserted=false;
-        } else {
-        timetableEntries.push("No.");
-        stoppingIndicatorNotInserted=false;
-        }
-      }
+
       if (arrivingBoolean && currentStation == targetStation && type == "ARRIVAL") {
-        console.log
+        //Put Yes/no in start of array entry to indicate if this train stops on target station:
+        if (stoppingIndicatorNotInserted) {
+          if (ttrow.commercialStop) {
+            timetableEntries.push("Yes.");
+            stoppingIndicatorNotInserted=false;
+          } else {
+          timetableEntries.push("No.");
+          stoppingIndicatorNotInserted=false;
+          }
+        }
         //Get timedata from JSON to variable:
         timestamp = ttrow.scheduledTime;
         //Make new date object out of it, date object usage also automatically converts time to local time.:
@@ -448,6 +448,15 @@ function loadData(inputdata) {
           saveOnLast = true;
         }
       } else if(departingBoolean && currentStation == targetStation && type == "DEPARTURE") {
+        if (stoppingIndicatorNotInserted) {
+          if (ttrow.commercialStop) {
+            timetableEntries.push("Yes.");
+            stoppingIndicatorNotInserted=false;
+          } else {
+          timetableEntries.push("No.");
+          stoppingIndicatorNotInserted=false;
+          }
+        }
         timestamp = ttrow.scheduledTime;
         delayedDepartureTime = new Date(timestamp);
         //console.log(lastTrainTypeAndNumber+" Departure time at targetstation: "+departureTime.getHours()+":"+departureTime.getMinutes());
@@ -467,13 +476,14 @@ function loadData(inputdata) {
           saveOnLast = true;
         }
       } 
+      /*DEBUG:
       if (obj.trainNumber == 233 && timetablerow > 60) {
         //Debug.
         //console.log("Train 233 timetablerow: " + timetablerow);
         //console.log("Train 233 timetablerows length: " + obj.timeTableRows.length);
         console.log("Train 233 savedtimes: " + savedTimes);
         console.log("Train 233 saveonlast: " + saveOnLast);
-      }
+      }*/
 
       if (saveOnLast && savedTimes) {        
         if (targetStationPassed) {
@@ -670,7 +680,7 @@ firstloop = true;
 samples = 0;
 arrayOfArrays.forEach(arrayEntries => {
   //Debug array output 29.4.2024:
-  if (arrayEntries.includes("HL1670")) {
+  if (arrayEntries.includes("IC68") || arrayEntries.includes("IC69") ||arrayEntries.includes("IC70")) {
   console.log("Arrayentry populatetablessa:" +arrayEntries);
 }
 

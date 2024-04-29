@@ -24,39 +24,7 @@ initializeLoad("dropdown");
 document.getElementById("stationDropDown").addEventListener('onchange', initializeLoad("dropdown"));
 document.getElementById("stationSearchButton").addEventListener('click', initializeLoad("searchbutton"));
 */
-//Event handler function calls encapsulated in anymous function calls, so they aren't called automatically every time that page loads:
-//Listener for Dropdown -menu:
-document.getElementById("stationDropDown").addEventListener('change', function() {
-  //Clear also textbox when dropdown is used:
-  document.getElementById("stationsearch").value="";
-  lastChanged="dropdown";
-  initializeLoad(lastChanged);
-});
-//Listener for search -box:
-document.getElementById("stationSearchButton").addEventListener('click', function() {
-  lastChanged="searchbutton";
-  initializeLoad(lastChanged);
-});
 
-//Event listener for dropdown menu to make populatetable sort entries again:
-//Sets also sortorder back to departures, for example in case of trying to sort with arrivals with only departures selected.
-//(And other way around)
-document.getElementById("sortSelectionDropdown").addEventListener('change', function() {
-  if (-1 < sortorder.value && sortorder.value < 2 && departingBoolean == false) {
-    sortorder.selectedIndex = 2;
-  } else if (sortorder.value > 1 && sortorder.value < 4 && arrivingBoolean == false) {
-    sortorder.selectedIndex = 0;
-  }
-  populatetable(["Sortrequest"])
-});
-
-//Event listener for radio buttons:
-var radioButtons = document.getElementsByName("howManyToFetch");
-radioButtons.forEach(function(radioButton) {
-  radioButton.addEventListener('click', function() {
-    initializeLoad(lastChanged);
-  });
-});
 
 /*I used https://jshint.com/ for additional checking of code, this is to tell checker that my code is using functionalities from EcmaScript 6:*/
 /*jshint esversion: 6 */
@@ -70,8 +38,6 @@ let -only available inside the block where they're defined
 var -available throught the function in which they're declared
 https://sentry.io/answers/difference-between-let-and-var-in-javascript/
 */
-
-
 
 //Initialize targetStation -variable here, so it can be used on all functions.
 targetStation = "";
@@ -128,6 +94,40 @@ document.getElementById("checkBoxes").addEventListener('click', function() {
       //reset delay back to 1 second:
       checkBoxDelayAmount = initialcheckboxdelay;
     }
+});
+
+//Event handler function calls encapsulated in anymous function calls, so they aren't called automatically every time that page loads:
+//Listener for Dropdown -menu:
+document.getElementById("stationDropDown").addEventListener('change', function() {
+  //Clear also textbox when dropdown is used:
+  document.getElementById("stationsearch").value="";
+  lastChanged="dropdown";
+  initializeLoad(lastChanged);
+});
+//Listener for search -box:
+document.getElementById("stationSearchButton").addEventListener('click', function() {
+  lastChanged="searchbutton";
+  initializeLoad(lastChanged);
+});
+
+//Event listener for dropdown menu to make populatetable sort entries again:
+//Sets also sortorder back to departures, for example in case of trying to sort with arrivals with only departures selected.
+//(And other way around)
+document.getElementById("sortSelectionDropdown").addEventListener('change', function() {
+  if (-1 < sortorder.value && sortorder.value < 2 && departingBoolean == false) {
+    sortorder.selectedIndex = 2;
+  } else if (sortorder.value > 1 && sortorder.value < 4 && arrivingBoolean == false) {
+    sortorder.selectedIndex = 0;
+  }
+  populatetable(["Sortrequest"])
+});
+
+//Event listener for radio buttons:
+var radioButtons = document.getElementsByName("howManyToFetch");
+radioButtons.forEach(function(radioButton) {
+  radioButton.addEventListener('click', function() {
+    initializeLoad(lastChanged);
+  });
 });
 
 function checkboxdelay() {
@@ -384,6 +384,7 @@ function loadData(inputdata) {
           if (arrivingBoolean) {
             if (lacksArrival) {
               if (timetablerow == 2) {
+                //-1001 for "Line start"
                 timetableEntries.push("Line start")
               } else {
                 timetableEntries.push("Arrival n/a");
@@ -510,6 +511,7 @@ function loadData(inputdata) {
         if (departingBoolean) {
           if (lacksDeparture) {
             if (lastTimeTableRow) {
+              //-1000 For "Terminates" (Number that sorting by departure puts entry in reasonable place)
               timetableEntries.push("Terminates")
             } else {
               timetableEntries.push("Departure n/a");
@@ -551,6 +553,7 @@ function loadData(inputdata) {
   //Finally, call function to put array's data to table:
   populatetable(timetableEntries)
 }
+
 //Function to output array's contents to HTML table.
 function populatetable(dataarray) {
   var arrayOfArrays = [];
@@ -576,25 +579,48 @@ function populatetable(dataarray) {
         }
     }
   }
+  /*
+  console.log(arrayOfArrays[0]);
+  console.log(arrayOfArrays[1]);
+  console.log(arrayOfArrays[2]);
+  console.log(arrayOfArrays[3]);
+  console.log(arrayOfArrays[4]);
+  console.log(arrayOfArrays[5]);
+  console.log(arrayOfArrays[6]);
+  console.log(arrayOfArrays[7]);
+  console.log(arrayOfArrays[8]);
+  console.log(arrayOfArrays[9]);
+  console.log(arrayOfArrays[10]);
+  console.log(arrayOfArrays[11]);
+  console.log(arrayOfArrays[12]);
+  console.log(arrayOfArrays[13]);
+  console.log(arrayOfArrays[14]);
+  console.log(arrayOfArrays[15]);
+*/
 
 //Define where dates are by selections:
   if (departingBoolean) {
     departuresPosition = 1;
+    trainNumberPosition = 6;
     if (arrivingBoolean) {
-      arrivalsPosition = 2;
+      arrivalsPosition = 1;
+      departuresPosition = 2;
+      trainNumberPosition = 7;
     } else {
       //Put something to integer so if statement below won't produce errors with potential empty variables:
       arrivalsPosition = 99;
+      trainNumberPosition = 99;
     }
   } else {
     if (arrivingBoolean) {
       arrivalsPosition = 1;
+      trainNumberPosition = 6;
     } else {
       console.log("Populatetable didn't find selected departures or arrivals.")
     }
   }
 //Sort arrays by wanted sorting order:
-/*
+
 //0: departures, ascending:
 if (sortorder.value == 0) {
   arrayOfArrays.sort((a, b) => a[departuresPosition] - b[departuresPosition]);
@@ -607,10 +633,18 @@ if (sortorder.value == 0) {
 //3: arrivals, descending:
 } else if (sortorder.value == 3) {
  arrayOfArrays.sort((b, a) => a[arrivalsPosition] - b[arrivalsPosition]);
+} else if (sortorder.value == 4) {
+  //console.log("Sort 4");
+  arrayOfArrays.sort((a, b) => a[trainNumberPosition] - b[trainNumberPosition]);
+} else if (sortorder.value == 5) {
+  //console.log("Sort 5");
+  arrayOfArrays.sort((b, a) => a[trainNumberPosition] - b[trainNumberPosition]);
+  //console.log("Arrayofarray kokonaisuudessaan sortissa: "+ arrayOfArrays);
+  //console.log(arrayOfArrays[trainNumberPosition-1]+arrayOfArrays[trainNumberPosition]+arrayOfArrays[trainNumberPosition+1]);
 } else {
   console.log("Populatetable didn't get correct sort order parameter.")
 }
-*/
+
   //Define different table's components:
   const targetdiv = document.getElementById('contentbyscript');
   const Table = document.createElement('table');
@@ -676,10 +710,6 @@ tableRowNumber = 0;
 firstloop = true;
 arrayOfArrays.forEach(arrayEntries => {
   let entryCount = arrayEntries.length;
-  //Debug array output 29.4.2024:
-  if (arrayEntries.includes("JNS") || arrayEntries.includes("KV")) {
-    console.log("Arrayentry populatetablessa:" +arrayEntries);
-  }
 
   /*Declare variable here, so it provides usable data for
   TableBody.appendChild(window['iteratedTableRow'+tableRowNumber]);
@@ -740,6 +770,18 @@ arrayOfArrays.forEach(arrayEntries => {
             //console.log("populatetable hit non-date mark on date field");
             //rowOfInterest = false;
 
+            //29.4.2024: Explanations for codes, which are added to aid sorting:
+            if (obj=="Line start") {
+              //Refinement: If sorting is by arrivals, we probably don't want to see starting trains at all:
+              if (sortorder.value == 2 || sortorder.value == 3) {
+                rowOfInterest = false;
+              } 
+            } else if (obj=="Terminates") {
+              //This requires triggering secondDate below to work:
+              if (sortorder.value == 0 || sortorder.value == 1) {
+                rowOfInterest = false;
+              } 
+            }
             //refactoring of this else statement 29.4.2024:
             window['iterated'+tableComponentNumber] = document.createElement('td');
             window['iterated'+tableComponentNumber].textContent = obj;
@@ -747,8 +789,8 @@ arrayOfArrays.forEach(arrayEntries => {
             tableComponentNumber +=1;
             //arrayEntryIncrement = 1;
           }
-          //Check if next obj is also timestamp:
-          if (arrayEntries[arrayEntryNumber+1] instanceof Date) {
+          //Check if next obj is also timestamp, new round also, if there's termination code in next cell:
+          if (arrayEntries[arrayEntryNumber+1] instanceof Date || arrayEntries[arrayEntryNumber+1] == "Terminates") {
             secondDate = true;
           }
           //arrayEntryNumber = arrayEntryNumber + arrayEntryIncrement;

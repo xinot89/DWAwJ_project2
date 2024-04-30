@@ -42,10 +42,6 @@ https://sentry.io/answers/difference-between-let-and-var-in-javascript/
 //Initialize targetStation -variable here, so it can be used on all functions.
 targetStation = "";
 
-//Preformatted string for if clauses, which contains selected entries:
-//Used when picking entries to table with loaddata()
-selectedDataIfClause = "";
-
 //Variable to store last changed element, so browser knows whether to use dropdown menu's or search box's
 //input when e.g. radio buttons are changed.
 lastChanged = "dropdown";
@@ -59,6 +55,9 @@ arrivingBoolean = false;
 departedBoolean = false;
 departingBoolean = false;
 nonStoppingBoolean = false;
+/* Selection of non-passenger trains. I was lazy and didn't include this in query, so it's value is 
+*/
+nonPassengerTrainBoolean = document.getElementById("CheckboxGroup1_5").checked;
 
 //Storage for fetched data, so no new fetch is necessary when sorting data:
 //Used by populateTable -function.
@@ -77,10 +76,10 @@ var sortorder = document.getElementById("sortSelectionDropdown");
 
 //Variable where if statement can check if interval is already running:
 let intervalForCheckboxes = 0;
-const initialcheckboxdelay = 1500;
+const initialcheckboxdelay = 1000;
 checkBoxDelayAmount = initialcheckboxdelay;
-//Event listener that starts delay function for checkboxes or resets delay to 1,5s in case, delay timer is already running:
-//Developed originally when there was 4 options so quite futile now.
+//Event listener that starts delay function for checkboxes or resets delay to 1s in case that, delay timer is already running:
+//Developed originally when there was 4 time options so quite futile now.
 document.getElementById("checkBoxes").addEventListener('click', function() {
     //If interval isn't set:
     if (intervalForCheckboxes == 0) {
@@ -91,7 +90,7 @@ document.getElementById("checkBoxes").addEventListener('click', function() {
       //Call checkboxdelay function every 100ms:
       intervalForCheckboxes = setInterval(checkboxdelay,100);
     } else {
-      //reset delay back to 1 second:
+      //If there's something on interval (ie. checkboxes are being clicked and "timer" is running" reset delay back to 1 second:
       checkBoxDelayAmount = initialcheckboxdelay;
     }
 });

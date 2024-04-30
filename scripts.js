@@ -18,17 +18,14 @@ document.addEventListener('DOMContentLoaded', () => {
 initializeLoad("dropdown");
 });
 
-
 /*Original event handlers, issue with these was that they called configured function every time page loaded.
 //Event listeners for station dropdown -menu and search without setting constants:
 document.getElementById("stationDropDown").addEventListener('onchange', initializeLoad("dropdown"));
 document.getElementById("stationSearchButton").addEventListener('click', initializeLoad("searchbutton"));
 */
 
-
 /*I used https://jshint.com/ for additional checking of code, this is to tell checker that my code is using functionalities from EcmaScript 6:*/
 /*jshint esversion: 6 */
-
 
 /* Short tutorial on event handlers: https://blog.logrocket.com/dynamically-create-javascript-elements-event-handlers/
 Cannot make sense on */
@@ -55,8 +52,7 @@ arrivingBoolean = false;
 departedBoolean = false;
 departingBoolean = false;
 nonStoppingBoolean = false;
-/* Selection of non-passenger trains. I was lazy and didn't include this in query, so it's value is 
-*/
+//Selection of non-passenger trains. I was lazy and didn't include this in query:
 nonPassengerTrainBoolean = document.getElementById("CheckboxGroup1_5").checked;
 
 //Storage for fetched data, so no new fetch is necessary when sorting data:
@@ -238,9 +234,7 @@ function initializeLoad(fromwhere) {
   if (nonStoppingBoolean) {
     nonstoppingComponent = "&include_nonstopping=1";
   }
-
   fetchurl = urlbasePerStation+targetStation+arrivedComponent+arrivingComponent+departedComponent+departingComponent+nonstoppingComponent;
-
   //In production version, fetchurl goes as datafetch's parameter:
   if (proceed) {
     datafetch();
@@ -248,7 +242,6 @@ function initializeLoad(fromwhere) {
     checkboxerror();
   }
 }
-
 function checkboxerror() {
   document.getElementById("checkboxErrorOutput").innerHTML = "Select at least one datatype to fetch.";
   errorElements = document.querySelectorAll("checkboxErrorGroup");
@@ -275,7 +268,6 @@ async function datafetch() {
   fetch("Kouvola_sample.json")
   //await fetch(fetchurl)
 
-  
   .then(response => {
     if (!response.ok) {
       throw new Error('Sample file loading was not ok');
@@ -285,6 +277,24 @@ async function datafetch() {
   .then(jsonData => {
     loadData(jsonData);
   })
+  .catch(error => {
+    console.error('There was a problem with the fetch operation:', error);
+  });
+}
+
+//Function to get train types from api:
+//Used by populatetable.
+async function trainTypeFetch() {
+  await fetch("https://rata.digitraffic.fi/api/v1/metadata/train-types")
+  .then(response => {
+    if (!response.ok) {
+      throw new Error('Sample file loading was not ok');
+    }
+    return response.json();
+  })/*
+  .then(jsonData => {
+    loadData(jsonData);
+  })*/
   .catch(error => {
     console.error('There was a problem with the fetch operation:', error);
   });
@@ -317,7 +327,6 @@ function loadData(inputdata) {
   } else if (departingBoolean) {
     trackSaver="Departure";
   }
-
   inputdata.forEach(obj => {
     //These variables are for mechanism to insert "---" in case of no departure entries and such:
     lacksArrival = true;
@@ -338,9 +347,6 @@ function loadData(inputdata) {
     savedTimes=false;
     //Variable to set boolean value on each train if there's stop on targetStation.
     stoppingIndicatorNotInserted = true;
-    //console.log(obj.trainNumber);
-
-    //Moved lacksArrival, lacksDeparture and targetStationPassed from here to train's loop.
 
     //Moved from inner loop:
     lastTrainLetter = obj.commuterLineID;
@@ -349,16 +355,13 @@ function loadData(inputdata) {
     //lastTrainTypeAndNumber = obj.trainType+obj.trainNumber;
     lastTrainType = obj.trainType;
     lastTrainNumber = obj.trainNumber;
-
     obj.timeTableRows.forEach(ttrow => {
-
       //Define timetable event type:
       type = ttrow.type;
       //If station of interest is last, use save functionality after all if clauses instead of next round's.
       if (ttrow.stationShortCode == targetStation && timetablerow == obj.timeTableRows.length) {
         lastTimeTableRow = true;
       }
-
       //Station code for comparison below:
       currentStation = ttrow.stationShortCode;
       //check if target station is passed:
@@ -383,7 +386,6 @@ function loadData(inputdata) {
           if (arrivingBoolean) {
             if (lacksArrival) {
               if (timetablerow == 2) {
-                //-1001 for "Line start"
                 timetableEntries.push("Line start")
               } else {
                 timetableEntries.push("Arrival n/a");
@@ -414,7 +416,6 @@ function loadData(inputdata) {
           }
           timetableEntries.push(lastTrainDestination);
         }
-        //timetableEntries.push(lastTrainTypeAndNumber);
         timetableEntries.push(lastTrainType);
         timetableEntries.push(lastTrainNumber);
         //Save separator to array:
@@ -438,7 +439,6 @@ function loadData(inputdata) {
         //Make new date object out of it, date object usage also automatically converts time to local time.:
         //Date object is milliseconds since epoch, so it's easy to compare
         delayedArrivalTime = new Date(timestamp);
-        //console.log(lastTrainTypeAndNumber+" Arrival time at targetstation: "+arrivalTime.getHours()+":"+arrivalTime.getMinutes());
         //Moved to setting date object directly to used variable 29.4.2024, 9:34. was:delayedArrivalTime = arrivalTime;
         
         lacksArrival = false;
@@ -447,8 +447,6 @@ function loadData(inputdata) {
             lastCommercialTrack="n/a";
           } else {
             lastCommercialTrack = ttrow.commercialTrack;
-            //lastCommercialTrack = 20;
-            //timetableEntries.push(ttrow.commercialTrack);
           }
         }
         lastStation = currentStation;
@@ -468,7 +466,6 @@ function loadData(inputdata) {
         }
         timestamp = ttrow.scheduledTime;
         delayedDepartureTime = new Date(timestamp);
-        //console.log(lastTrainTypeAndNumber+" Departure time at targetstation: "+departureTime.getHours()+":"+departureTime.getMinutes());
         //Moved to setting date object directly to used variable 29.4.2024, 9:34. was:delayedDepartureTime = departureTime;
         lacksDeparture = false;
         if (trackSaver == "Departure") {
@@ -485,14 +482,6 @@ function loadData(inputdata) {
           saveOnLast = true;
         }
       } 
-      /*DEBUG:
-      if (obj.trainNumber == 233 && timetablerow > 60) {
-        //Debug.
-        //console.log("Train 233 timetablerow: " + timetablerow);
-        //console.log("Train 233 timetablerows length: " + obj.timeTableRows.length);
-        console.log("Train 233 savedtimes: " + savedTimes);
-        console.log("Train 233 saveonlast: " + saveOnLast);
-      }*/
 
       if (saveOnLast && savedTimes) {        
         if (targetStationPassed) {
@@ -578,24 +567,6 @@ function populatetable(dataarray) {
         }
     }
   }
-  /*
-  console.log(arrayOfArrays[0]);
-  console.log(arrayOfArrays[1]);
-  console.log(arrayOfArrays[2]);
-  console.log(arrayOfArrays[3]);
-  console.log(arrayOfArrays[4]);
-  console.log(arrayOfArrays[5]);
-  console.log(arrayOfArrays[6]);
-  console.log(arrayOfArrays[7]);
-  console.log(arrayOfArrays[8]);
-  console.log(arrayOfArrays[9]);
-  console.log(arrayOfArrays[10]);
-  console.log(arrayOfArrays[11]);
-  console.log(arrayOfArrays[12]);
-  console.log(arrayOfArrays[13]);
-  console.log(arrayOfArrays[14]);
-  console.log(arrayOfArrays[15]);
-*/
 
 //Define where dates are by selections:
   if (departingBoolean) {
@@ -668,19 +639,10 @@ if (nonStoppingBoolean) {
   doesTrainStop.textContent="Stopping?";
   TableHeadingRow.appendChild(doesTrainStop);
 }
-/*if (arrivedBoolean) {
-  ArrivedTime.textContent ="Arrived";
-  //Append heading column:
-  TableHeadingRow.appendChild(ArrivedTime);
-}*/
 if (arrivingBoolean) {
   ArrivingTime.textContent = "Arriving";
   TableHeadingRow.appendChild(ArrivingTime);
 }
-/*if (departedBoolean) {
-  DepartedTime.textContent = "Departed";
-  TableHeadingRow.appendChild(DepartedTime);
-}*/
 if (departingBoolean) {
   DepartureTime.textContent ="Departure";
   TableHeadingRow.appendChild(DepartureTime);
@@ -705,6 +667,11 @@ tableComponentNumber = 0;
 //Needs to be separate from cells because othervise all cells would be appended to one line.
 tableRowNumber = 0;
 
+//Fetch train types:
+trainTypes = trainTypeFetch();
+trainTypes.forEach(type => {
+  console.log(type)
+});
 //Used for making new row element at start of loop:
 firstloop = true;
 arrayOfArrays.forEach(arrayEntries => {
@@ -717,6 +684,10 @@ arrayOfArrays.forEach(arrayEntries => {
   rowOfInterest = true;
   arrayEntryNumber = 0;
   secondDate = false
+  //console.log(arrayEntries[entryCount-2]);
+  if (nonPassengerTrainBoolean == false && arrayEntries[entryCount-2]=="T" || arrayEntries[entryCount-2]=="VET") {
+    rowOfInterest = false;
+  }
     //Following iterates through every object in data-array and returns train number and other data on same level:
     arrayEntries.forEach(obj => {
       //If subarray has been marked uninteresting, we may skip it's processing:

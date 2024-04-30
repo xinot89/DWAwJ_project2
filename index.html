@@ -65,6 +65,7 @@
         </div>
         <div class="item">
             <div id="checkBoxes">
+                <!--Modifying these selections on webpage triggers initializeLoad-->
                 <label>
                     <input class="checkboxErrorGroup" type="checkbox" name="CheckboxGroup1" value="2" id="CheckboxGroup1_1">
                     Arrivals
@@ -76,10 +77,13 @@
                 </label>
                 <br>
                 <span id="checkboxErrorOutput"></span>
-            <br>
+                <br>
                 <label>
                     <input type="checkbox" name="CheckboxGroup1" value="5" id="CheckboxGroup1_4"> 
-                    Include also non-stopping trains.
+                    Non-stopping trains.
+                    <br>
+                    <input type="checkbox" name="CheckboxGroup1" value="5" id="CheckboxGroup1_5"> 
+                    Non-passenger trains.
                 </label>
             </div>
             <br>

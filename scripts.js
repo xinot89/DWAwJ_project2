@@ -54,6 +54,8 @@ departingBoolean = false;
 nonStoppingBoolean = false;
 //Selection of non-passenger trains. I was lazy and didn't include this in query:
 nonPassengerTrainBoolean = document.getElementById("CheckboxGroup1_5").checked;
+//Variable to hold array of train types, used in filtering:
+trainTypes = null;
 
 //Storage for fetched data, so no new fetch is necessary when sorting data:
 //Used by populateTable -function.
@@ -280,21 +282,18 @@ async function datafetch() {
   .catch(error => {
     console.error('There was a problem with the fetch operation:', error);
   });
-}
-
-//Function to get train types from api:
+//Functionality to get train types from api:
 //Used by populatetable.
-async function trainTypeFetch() {
   await fetch("https://rata.digitraffic.fi/api/v1/metadata/train-types")
   .then(response => {
     if (!response.ok) {
       throw new Error('Sample file loading was not ok');
     }
     return response.json();
-  })/*
-  .then(jsonData => {
-    loadData(jsonData);
-  })*/
+  })
+  .then(jsonTypeData => {
+    trainTypes = jsonTypeData;
+  })
   .catch(error => {
     console.error('There was a problem with the fetch operation:', error);
   });
@@ -543,7 +542,7 @@ function loadData(inputdata) {
 }
 
 //Function to output array's contents to HTML table.
-function populatetable(dataarray) {
+async function populatetable(dataarray) {
   var arrayOfArrays = [];
   if (dataarray[0]=="Sortrequest") {
     //Fill arrayOfArrays with stored data:
@@ -667,10 +666,14 @@ tableComponentNumber = 0;
 //Needs to be separate from cells because othervise all cells would be appended to one line.
 tableRowNumber = 0;
 
-//Fetch train types:
-trainTypes = trainTypeFetch();
+//Array for non-passenger trains:
+nonPassengerTrainTypes = [];
+//Go through train types:
 trainTypes.forEach(type => {
-  console.log(type)
+  if (type.trainCategory.name != "Commuter" && type.trainCategory.name !="Long-distance"){
+    nonPassengerTrainTypes.push(type.name);
+    //console.log(type.name);
+  }
 });
 //Used for making new row element at start of loop:
 firstloop = true;
@@ -684,8 +687,8 @@ arrayOfArrays.forEach(arrayEntries => {
   rowOfInterest = true;
   arrayEntryNumber = 0;
   secondDate = false
-  //console.log(arrayEntries[entryCount-2]);
-  if (nonPassengerTrainBoolean == false && arrayEntries[entryCount-2]=="T" || arrayEntries[entryCount-2]=="VET") {
+  //Compares, if current train's type is found in nonPassengerTrainTypes:
+  if (nonPassengerTrainBoolean == false && nonPassengerTrainTypes.includes(arrayEntries[entryCount-2])) {
     rowOfInterest = false;
   }
     //Following iterates through every object in data-array and returns train number and other data on same level:

@@ -56,6 +56,8 @@ nonStoppingBoolean = false;
 nonPassengerTrainBoolean = document.getElementById("CheckboxGroup1_5").checked;
 //Variable to hold array of train types, used in filtering:
 trainTypes = null;
+//Variable to hold train station data, datafetch fills, populatetable uses (and maybe initializeload)
+trainStations = null;
 
 //Storage for fetched data, so no new fetch is necessary when sorting data:
 //Used by populateTable -function.
@@ -182,7 +184,7 @@ function initializeLoad(fromwhere) {
     return false;
   }
   //For debug purposes, set target station to kouvola, which produces errors:
-  targetStation = "KV"
+  //targetStation = "KV"
   //Get entries to fetch:
   //fetchcount = document.getElementsByName("howManyToFetch").values;
 
@@ -282,8 +284,40 @@ async function datafetch() {
   //Choose sample or production data:
   //fetch('Datasample.json')
   //Sample data from kouvola 26.4.2024 which produces errors cell/row changes:
-  fetch("Kouvola_sample.json")
-  //await fetch(fetchurl)
+  //fetch("Kouvola_sample.json")
+
+  //Load station data:
+  await fetch("https://rata.digitraffic.fi/api/v1/metadata/stations")
+  .then(response => {
+    if (!response.ok) {
+      throw new Error('Station data loading was not ok.');
+    }
+    return response.json();
+  })
+  .then(jsonStationData => {
+    trainStations = jsonStationData;
+  })
+  .catch(error => {
+    console.error('There was a problem with the fetch operation:', error);
+  });
+  //Moved before time data load because otherwise times might get into the table before train types are loaded.
+  //Functionality to get train types from api:
+  //Used by populatetable.
+  await fetch("https://rata.digitraffic.fi/api/v1/metadata/train-types")
+  .then(response => {
+    if (!response.ok) {
+      throw new Error('Train type -data loading was not ok');
+    }
+    return response.json();
+  })
+  .then(jsonTypeData => {
+    trainTypes = jsonTypeData;
+  })
+  .catch(error => {
+    console.error('There was a problem with the fetch operation:', error);
+  });
+  //Train/timetable data:
+  await fetch(fetchurl)
 
   .then(response => {
     if (!response.ok) {
@@ -293,21 +327,6 @@ async function datafetch() {
   })
   .then(jsonData => {
     loadData(jsonData);
-  })
-  .catch(error => {
-    console.error('There was a problem with the fetch operation:', error);
-  });
-//Functionality to get train types from api:
-//Used by populatetable.
-  await fetch("https://rata.digitraffic.fi/api/v1/metadata/train-types")
-  .then(response => {
-    if (!response.ok) {
-      throw new Error('Sample file loading was not ok');
-    }
-    return response.json();
-  })
-  .then(jsonTypeData => {
-    trainTypes = jsonTypeData;
   })
   .catch(error => {
     console.error('There was a problem with the fetch operation:', error);
@@ -784,7 +803,26 @@ arrayOfArrays.forEach(arrayEntries => {
           //arrayEntryNumber = arrayEntryNumber + arrayEntryIncrement;
           arrayEntryNumber++;
         } else if (rowOfInterest && arrayEntryNumber > 1) {
-          if (arrayEntryNumber == entryCount-2) {
+          if (arrayEntryNumber == entryCount-3) {
+            //Third last entry of array, which should be station code.
+            //Converts displayed station code to station name.
+
+            //First we try to find station code:
+            // Check if any property value contains the keyword
+            var codeContainingObject = trainStations.find(function(item) {
+              return item.hasOwnProperty('stationShortCode') && typeof item.stationShortCode === "string" && item.stationShortCode === obj;
+            });
+              window['iterated'+tableComponentNumber] = document.createElement('td');
+            if (codeContainingObject) {
+              // Get the index of the entry
+              var entryIndex = trainStations.indexOf(codeContainingObject);
+              //console.log(trainStations[entryIndex].stationName);
+              window['iterated'+tableComponentNumber].textContent = trainStations[entryIndex].stationName;
+            } else {
+              window['iterated'+tableComponentNumber].textContent = obj;
+            }
+            window['iteratedTableRow'+tableRowNumber].appendChild(window['iterated'+tableComponentNumber]);      
+          } else if (arrayEntryNumber == entryCount-2) {
             //Second last cell (Train type)
             //Create cell:
             window['iterated'+tableComponentNumber] = document.createElement('td');

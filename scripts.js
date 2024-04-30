@@ -52,7 +52,7 @@ arrivingBoolean = false;
 departedBoolean = false;
 departingBoolean = false;
 nonStoppingBoolean = false;
-//Selection of non-passenger trains. I was lazy and didn't include this in query:
+//Selection of non-passenger trains. This takes initial value on page load:
 nonPassengerTrainBoolean = document.getElementById("CheckboxGroup1_5").checked;
 //Variable to hold array of train types, used in filtering:
 trainTypes = null;
@@ -62,7 +62,10 @@ trainTypes = null;
 dataarrayStore = []
 
 //Dropdown menu for selecting sorting order:
-var sortorder = document.getElementById("sortSelectionDropdown");
+const sortorder = document.getElementById("sortSelectionDropdown");
+//Arrival and departure checkboxes:
+const arrivalCheckbox = document.getElementById("CheckboxGroup1_1")
+const departureCheckbox = document.getElementById("CheckboxGroup1_3")
 //Variable to store populatetable's sorting order:
 /*
 0: departures, ascending
@@ -79,12 +82,13 @@ checkBoxDelayAmount = initialcheckboxdelay;
 //Event listener that starts delay function for checkboxes or resets delay to 1s in case that, delay timer is already running:
 //Developed originally when there was 4 time options so quite futile now.
 document.getElementById("checkBoxes").addEventListener('click', function() {
+    //Update Non-Passenger trains variable, others get updated in initializeLoad.
+    nonPassengerTrainBoolean = document.getElementById("CheckboxGroup1_5").checked;
     //If interval isn't set:
     if (intervalForCheckboxes == 0) {
       /*Story: I implemented this with setInterval because javascript didn't stop at setTimeout() 
-      For delay, there was also resource intensive for -loop option available which kept javascript occupied
+      For delay, there was also resource intensive for -loop option available which kept computer/javascript occupied
       by running loop for waiting time, until set time come. That seemed inappropriate.*/
-
       //Call checkboxdelay function every 100ms:
       intervalForCheckboxes = setInterval(checkboxdelay,100);
     } else {
@@ -111,12 +115,23 @@ document.getElementById("stationSearchButton").addEventListener('click', functio
 //Sets also sortorder back to departures, for example in case of trying to sort with arrivals with only departures selected.
 //(And other way around)
 document.getElementById("sortSelectionDropdown").addEventListener('change', function() {
+  //If sortorder is set to departures, but departures aren't selected:
   if (-1 < sortorder.value && sortorder.value < 2 && departingBoolean == false) {
-    sortorder.selectedIndex = 2;
+    //Select sorting by arrivals, descending:
+    //sortorder.selectedIndex = 2;
+    //Edit 30.4.2024: Fetch departures and set checkboxes accordingly:
+    departureCheckbox.checked = true;
+    arrivalCheckbox.checked = false;
+    initializeLoad(lastChanged);
   } else if (sortorder.value > 1 && sortorder.value < 4 && arrivingBoolean == false) {
-    sortorder.selectedIndex = 0;
+    //sortorder.selectedIndex = 0;
+    arrivalCheckbox.checked = true;
+    departureCheckbox.checked = false;
+    initializeLoad(lastChanged);
+  } else {
+    //If required data is already loaded (ie: ascending-descending -swap) use readily loaded data instead of new query.
+    populatetable(["Sortrequest"])
   }
-  populatetable(["Sortrequest"])
 });
 
 //Event listener for radio buttons:
@@ -201,7 +216,7 @@ function initializeLoad(fromwhere) {
     proceed = true;
   }
   arrivingComponent = "&arriving_trains=0";
-  arrivingBoolean = document.getElementById("CheckboxGroup1_1").checked;
+  arrivingBoolean = arrivalCheckbox.checked;
   //Set sorting by selected data if it's set to unselected data:
   //Sortorder 0-1: departures
   //Change sort order to "Arrivals, ascending" if sorting by departures is selected but departures aren't fetched:
@@ -220,7 +235,7 @@ function initializeLoad(fromwhere) {
     proceed = true;
   }
   departingComponent = "&departing_trains=0";
-  departingBoolean = document.getElementById("CheckboxGroup1_3").checked;
+  departingBoolean = departureCheckbox.checked;
   //Set sorting by selected data if it's set to unselected data:
   //Sortorder 2-3: arrivals
   //Change sort order to "Departures, ascending" if sorting by arrivals is selected but arrivals aren't fetched:

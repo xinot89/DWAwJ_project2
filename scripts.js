@@ -17,8 +17,10 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById("stationsearch").value="";
   //Load auxiliary data automatically on page load: (Stations and train types)
   datafetch("Pageload");
+  console.log("Datafetch pageload lauottu.");
   //Load automatically preselected station's times:
-  initializeLoad("dropdown");
+  //Moved automatical page load from here to end of datafetch's auxiliary data part.
+  //console.log("Initializeload lauottu, traintypes: "+trainTypes);
 });
 
 /*Original event handlers, issue with these was that they called configured function every time page loaded.
@@ -100,6 +102,23 @@ document.getElementById("checkBoxes").addEventListener('click', function() {
       //If there's something on interval (ie. checkboxes are being clicked and "timer" is running" reset delay back to 1 second:
       checkBoxDelayAmount = initialcheckboxdelay;
     }
+});
+
+//Event listener for city search -box:
+document.getElementById("stationSearchByNameButton").addEventListener('click', function() {
+//And this should somehow look from station array, can entered station be found....
+var codeContainingObject = trainStations.find(function(item) {
+  return item.hasOwnProperty('stationShortCode') && typeof item.stationShortCode === "string" && item.stationShortCode === obj;
+});
+  window['iterated'+tableComponentNumber] = document.createElement('td');
+if (codeContainingObject) {
+  // Get the index of the entry
+  var entryIndex = trainStations.indexOf(codeContainingObject);
+  //console.log(trainStations[entryIndex].stationName);
+  window['iterated'+tableComponentNumber].textContent = trainStations[entryIndex].stationName;
+} else {
+  window['iterated'+tableComponentNumber].textContent = obj;
+}
 });
 
 //Event handler function calls encapsulated in anymous function calls, so they aren't called automatically every time that page loads:
@@ -259,6 +278,7 @@ function initializeLoad(fromwhere) {
   fetchurl = urlbasePerStation+targetStation+arrivedComponent+arrivingComponent+departedComponent+departingComponent+nonstoppingComponent;
   //In production version, fetchurl goes as datafetch's parameter:
   if (proceed) {
+    //1.5.2024: Added "Dummy", so datafetch's if statement goes into "else" -section which is normal fetch.
     datafetch("Dummy");
   } else {
     checkboxerror();
@@ -288,10 +308,7 @@ async function datafetch(startParameters) {
   //fetch('Datasample.json')
   //Sample data from kouvola 26.4.2024 which produces errors cell/row changes:
   //fetch("Kouvola_sample.json")
-
-
   //Load data used by search and populatetable automatically on page load and timetable data when needed information is acquired.
-  console.log("datafetch käynnistyi, startparameters: " + startParameters);
   if (startParameters == "Pageload") {
     //Load station data:
     await fetch("https://rata.digitraffic.fi/api/v1/metadata/stations")
@@ -310,19 +327,21 @@ async function datafetch(startParameters) {
     //Moved before time data load because otherwise times might get into the table before train types are loaded.
     //Functionality to get train types from api:
     //Used by populatetable.
-    await fetch("https://rata.digitraffic.fi/api/v1/metadata/train-types")
-    .then(response => {
+    //Alternate approach to prevent getting "promises" in trainTypes.
+    //Approach itself didn't work, but moving initializeLoad call to here from domcontentloaded -eventlistener worked.
+    try {
+    const response = await fetch("https://rata.digitraffic.fi/api/v1/metadata/train-types")
       if (!response.ok) {
         throw new Error('Train type -data loading was not ok');
       }
-      return response.json();
-    })
-    .then(jsonTypeData => {
-      trainTypes = jsonTypeData;
-    })
-    .catch(error => {
+    const jsonTypeData = await response.json();
+    trainTypes = jsonTypeData;
+    } catch (error) {
       console.error('There was a problem with the fetch operation:', error);
-    });
+    }
+    //console.log("Traintypes noudettu: "+trainTypes);
+    //Initial data load:
+    initializeLoad("dropdown");
   } else {
     //Train/timetable data:
     await fetch(fetchurl)
@@ -340,6 +359,13 @@ async function datafetch(startParameters) {
       console.error('There was a problem with the fetch operation:', error);
     });
   }
+}
+function fetchTrainTypes() {
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      resolve('resolved');
+    }, 2000);
+  });
 }
 
 /*Function to load data to array.

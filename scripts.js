@@ -15,7 +15,10 @@ https://rata.digitraffic.fi/api/v1/metadata/stations
 document.addEventListener('DOMContentLoaded', () => {
   //Clear also textbox when page is refreshed/loaded:
   document.getElementById("stationsearch").value="";
-initializeLoad("dropdown");
+  //Load auxiliary data automatically on page load: (Stations and train types)
+  datafetch("Pageload");
+  //Load automatically preselected station's times:
+  initializeLoad("dropdown");
 });
 
 /*Original event handlers, issue with these was that they called configured function every time page loaded.
@@ -256,7 +259,7 @@ function initializeLoad(fromwhere) {
   fetchurl = urlbasePerStation+targetStation+arrivedComponent+arrivingComponent+departedComponent+departingComponent+nonstoppingComponent;
   //In production version, fetchurl goes as datafetch's parameter:
   if (proceed) {
-    datafetch();
+    datafetch("Dummy");
   } else {
     checkboxerror();
   }
@@ -278,7 +281,7 @@ function checkboxwhitening() {
 
 //Function to actually fetch data from server:
 //Async when fetching from web.
-async function datafetch() {
+async function datafetch(startParameters) {
   //When playing with production data, make this function to expect string as input and give that string as parameter to next line instead of sample data.
   //console.log(fetchurl);
   //Choose sample or production data:
@@ -286,51 +289,57 @@ async function datafetch() {
   //Sample data from kouvola 26.4.2024 which produces errors cell/row changes:
   //fetch("Kouvola_sample.json")
 
-  //Load station data:
-  await fetch("https://rata.digitraffic.fi/api/v1/metadata/stations")
-  .then(response => {
-    if (!response.ok) {
-      throw new Error('Station data loading was not ok.');
-    }
-    return response.json();
-  })
-  .then(jsonStationData => {
-    trainStations = jsonStationData;
-  })
-  .catch(error => {
-    console.error('There was a problem with the fetch operation:', error);
-  });
-  //Moved before time data load because otherwise times might get into the table before train types are loaded.
-  //Functionality to get train types from api:
-  //Used by populatetable.
-  await fetch("https://rata.digitraffic.fi/api/v1/metadata/train-types")
-  .then(response => {
-    if (!response.ok) {
-      throw new Error('Train type -data loading was not ok');
-    }
-    return response.json();
-  })
-  .then(jsonTypeData => {
-    trainTypes = jsonTypeData;
-  })
-  .catch(error => {
-    console.error('There was a problem with the fetch operation:', error);
-  });
-  //Train/timetable data:
-  await fetch(fetchurl)
 
-  .then(response => {
-    if (!response.ok) {
-      throw new Error('Sample file loading was not ok');
-    }
-    return response.json();
-  })
-  .then(jsonData => {
-    loadData(jsonData);
-  })
-  .catch(error => {
-    console.error('There was a problem with the fetch operation:', error);
-  });
+  //Load data used by search and populatetable automatically on page load and timetable data when needed information is acquired.
+  console.log("datafetch käynnistyi, startparameters: " + startParameters);
+  if (startParameters == "Pageload") {
+    //Load station data:
+    await fetch("https://rata.digitraffic.fi/api/v1/metadata/stations")
+    .then(response => {
+      if (!response.ok) {
+        throw new Error('Station data loading was not ok.');
+      }
+      return response.json();
+    })
+    .then(jsonStationData => {
+      trainStations = jsonStationData;
+    })
+    .catch(error => {
+      console.error('There was a problem with the fetch operation:', error);
+    });
+    //Moved before time data load because otherwise times might get into the table before train types are loaded.
+    //Functionality to get train types from api:
+    //Used by populatetable.
+    await fetch("https://rata.digitraffic.fi/api/v1/metadata/train-types")
+    .then(response => {
+      if (!response.ok) {
+        throw new Error('Train type -data loading was not ok');
+      }
+      return response.json();
+    })
+    .then(jsonTypeData => {
+      trainTypes = jsonTypeData;
+    })
+    .catch(error => {
+      console.error('There was a problem with the fetch operation:', error);
+    });
+  } else {
+    //Train/timetable data:
+    await fetch(fetchurl)
+
+    .then(response => {
+      if (!response.ok) {
+        throw new Error('Sample file loading was not ok');
+      }
+      return response.json();
+    })
+    .then(jsonData => {
+      loadData(jsonData);
+    })
+    .catch(error => {
+      console.error('There was a problem with the fetch operation:', error);
+    });
+  }
 }
 
 /*Function to load data to array.

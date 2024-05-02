@@ -17,7 +17,7 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById("stationsearch").value="";
   //Load auxiliary data automatically on page load: (Stations and train types)
   datafetch("Pageload");
-  console.log("Datafetch pageload lauottu.");
+  //console.log("Datafetch pageload lauottu.");
   //Load automatically preselected station's times:
   //Moved automatical page load from here to end of datafetch's auxiliary data part.
   //console.log("Initializeload lauottu, traintypes: "+trainTypes);
@@ -106,19 +106,19 @@ document.getElementById("checkBoxes").addEventListener('click', function() {
 
 //Event listener for city search -box:
 document.getElementById("stationSearchByNameButton").addEventListener('click', function() {
-//And this should somehow look from station array, can entered station be found....
-var codeContainingObject = trainStations.find(function(item) {
-  return item.hasOwnProperty('stationShortCode') && typeof item.stationShortCode === "string" && item.stationShortCode === obj;
+const searchQuery = document.getElementById("stationsearchByName").value;
+var nameFoundFrom = trainStations.find(function(item) {
+  return item.stationName === searchQuery;
 });
-  window['iterated'+tableComponentNumber] = document.createElement('td');
-if (codeContainingObject) {
+if (nameFoundFrom) {
   // Get the index of the entry
-  var entryIndex = trainStations.indexOf(codeContainingObject);
+  const nameFoundFromIndex = trainStations.indexOf(nameFoundFrom);
   //console.log(trainStations[entryIndex].stationName);
-  window['iterated'+tableComponentNumber].textContent = trainStations[entryIndex].stationName;
+  console.log("Hakuasema: " + trainStations[nameFoundFromIndex].stationShortCode);
 } else {
-  window['iterated'+tableComponentNumber].textContent = obj;
+  console.error("Aseman nimeä ei löytynyt.");
 }
+
 });
 
 //Event handler function calls encapsulated in anymous function calls, so they aren't called automatically every time that page loads:

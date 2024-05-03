@@ -68,6 +68,9 @@ trainStations = null;
 //Used by populateTable -function.
 dataarrayStore = []
 
+//array for station names for station suggestions:
+stationNames = [];
+
 //Dropdown menu for selecting sorting order:
 const sortorder = document.getElementById("sortSelectionDropdown");
 //Arrival and departure checkboxes:
@@ -104,21 +107,53 @@ document.getElementById("checkBoxes").addEventListener('click', function() {
     }
 });
 
-//Event listener for city search -box:
+//Event listener for station search -box:
 document.getElementById("stationSearchByNameButton").addEventListener('click', function() {
-const searchQuery = document.getElementById("stationsearchByName").value;
-var nameFoundFrom = trainStations.find(function(item) {
-  return item.stationName === searchQuery;
+  dealWithStationSearch()
 });
-if (nameFoundFrom) {
-  // Get the index of the entry
-  const nameFoundFromIndex = trainStations.indexOf(nameFoundFrom);
-  //console.log(trainStations[entryIndex].stationName);
-  console.log("Hakuasema: " + trainStations[nameFoundFromIndex].stationShortCode);
-} else {
-  console.error("Aseman nimeä ei löytynyt.");
-}
 
+//I made this update suggestions on each keyup, didn't seem excessive resource intensive. CPU grap actually doesn't even move noticeably when generating suggestions.
+document.getElementById("stationsearchByName").addEventListener('keyup', function() {
+  //Get station search box's value as query:
+  const searchSuggestionQuery = document.getElementById("stationsearchByName").value;
+
+  //Set div to variable, where to place suggestions:
+  const suggestionsTargetDiv = document.getElementById("searchSuggestions");
+  //Empty previous suggestions first:
+  suggestionsTargetDiv.innerHTML ="";
+  //Number of suggestion, so each created HTML element gets appended, instead just last.
+  var suggestionNumber = 0;
+  //Change query's first letter to uppercase:
+  const modSearchSuggestionQuery = searchSuggestionQuery[0].toUpperCase()+searchSuggestionQuery.slice(1);
+  //Variable to limit given suggestions:
+  var suggestionCount = 5;
+  //Array to store suggestions:
+  var suggestionArray = [];
+  //Saves each filtered method to new array, where each entry has passed contidion includes(searchSuggestionQuery)
+  suggestionArray = (stationNames.filter(entry => entry.startsWith(modSearchSuggestionQuery)));
+  //Limits suggestion array's length:
+  suggestionArray = suggestionArray.slice(0, 10);
+  //Create HTML buttons for each suggestion in array, use incrementing numbers in their id's:
+  suggestionArray.forEach(function(query) {
+    //Create HTML button element.
+    window['suggestionButton'+suggestionNumber] = document.createElement('button');
+    //Set button's value to query's value:
+    window['suggestionButton'+suggestionNumber].value = query;
+    //Add text to button:
+    window['suggestionButton'+suggestionNumber].textContent = query;
+    //Set also class to these suggestion buttons, so their selection is easier on event listener listening them:
+    window['suggestionButton'+suggestionNumber].classList.add("suggestionButtons");
+    suggestionsTargetDiv.append(window['suggestionButton'+suggestionNumber]);
+    suggestionNumber ++;
+  });
+  });
+  //Event listener for search suggestions div:
+document.getElementById("searchSuggestions").addEventListener('click', function() {
+  //https://stackoverflow.com/questions/63199551/how-to-get-the-values-of-buttons-with-eventlistener
+  const clickedButton = event.target;
+  console.log(clickedButton.value);
+  document.getElementById("stationsearchByName").value = clickedButton.value;
+  dealWithStationSearch();
 });
 
 //Event handler function calls encapsulated in anymous function calls, so they aren't called automatically every time that page loads:
@@ -165,6 +200,27 @@ radioButtons.forEach(function(radioButton) {
     initializeLoad(lastChanged);
   });
 });
+
+//Function to convert station search query into short code and search by that:
+function dealWithStationSearch() {
+  const searchQuery = document.getElementById("stationsearchByName").value;
+  /*Here i used "find" method for array, then provided callback function to it. Item represents
+  each array's entry one at a time and saves object into nameFoundFrom -variable if item meeting conditions has been found.*/
+  var nameFoundFrom = trainStations.find(function(item) {
+    return item.stationName === searchQuery;
+  });
+  if (nameFoundFrom) {
+    // Get the index of the object, stored in variable.
+    const nameFoundFromIndex = trainStations.indexOf(nameFoundFrom);
+    //console.log(trainStations[entryIndex].stationName);
+    //console.log("Hakuasema: " + trainStations[nameFoundFromIndex].stationShortCode);
+    lastChanged="searchbutton";
+    document.getElementById("stationsearch").value=trainStations[nameFoundFromIndex].stationShortCode;
+    initializeLoad(lastChanged);
+  } else {
+    console.error("Station name not found.");
+  }
+}
 
 function checkboxdelay() {
   if (checkBoxDelayAmount == 100) {
@@ -220,7 +276,6 @@ function initializeLoad(fromwhere) {
         break;
     }
   }
-  //List of train  categories, in case if needed: https://rata.digitraffic.fi/api/v1/metadata/train-categories
 
   //Variable to make sure that even something is selected before proceeding with fetching:
   proceed = false;
@@ -320,6 +375,9 @@ async function datafetch(startParameters) {
     })
     .then(jsonStationData => {
       trainStations = jsonStationData;
+      trainStations.forEach(tempEntry => {
+        stationNames.push(tempEntry.stationName);
+      });
     })
     .catch(error => {
       console.error('There was a problem with the fetch operation:', error);

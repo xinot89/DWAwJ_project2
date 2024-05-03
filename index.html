@@ -32,6 +32,11 @@
             <li>If sorting is requested by non-selected times, requested times are displayed.</li>
             <li>Sort menu also updates used sorting when checkboxes are clicked.</li>
             <li>Translates station codes into station names.</li>
+            <li>Station search by station name.
+                <ul>
+                    <li>Refined, now gives also suggestions and is automatically fixes first letter, if lowercase.</li>
+                </ul>
+            </li>
         </ul>
         <br>
     </div>
@@ -45,10 +50,11 @@
                 <option value="TKL">Tikkurila</option>
             </select>
             <p>
-            Or type in station code:<br><input id="stationsearch" /><button id="stationSearchButton">Search</button><!--<span id="cityerroroutput"></span>-->
+            Or type in station's code:<br><input id="stationsearch" /><button id="stationSearchButton">Search</button><!--<span id="cityerroroutput"></span>-->
             </p>
             <p>
-                Or search by city name:<br><input id="stationsearchByName" /><button id="stationSearchByNameButton">Search</button>
+                Or station's &lpar;exact&rpar; name:<br><input id="stationsearchByName" /><button id="stationSearchByNameButton">Search</button>
+                <br><div id="searchSuggestions"></div>
                 <br><span id="cityerroroutput"></span>
             </p>
             <p>

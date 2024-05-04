@@ -362,7 +362,10 @@ async function datafetch(startParameters) {
     .then(jsonStationData => {
       trainStations = jsonStationData;
       trainStations.forEach(tempEntry => {
-        stationNames.push(tempEntry.stationName);
+        //Include only those entries on search suggestions, which have passenger traffic:
+        if (tempEntry.passengerTraffic) {
+          stationNames.push(tempEntry.stationName);
+        }
       });
     })
     .catch(error => {

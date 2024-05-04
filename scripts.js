@@ -17,17 +17,9 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById("stationsearch").value="";
   //Load auxiliary data automatically on page load: (Stations and train types)
   datafetch("Pageload");
-  //console.log("Datafetch pageload lauottu.");
   //Load automatically preselected station's times:
-  //Moved automatical page load from here to end of datafetch's auxiliary data part.
-  //console.log("Initializeload lauottu, traintypes: "+trainTypes);
+  //Moved automatic page load function call from here to end of datafetch's auxiliary data part.
 });
-
-/*Original event handlers, issue with these was that they called configured function every time page loaded.
-//Event listeners for station dropdown -menu and search without setting constants:
-document.getElementById("stationDropDown").addEventListener('onchange', initializeLoad("dropdown"));
-document.getElementById("stationSearchButton").addEventListener('click', initializeLoad("searchbutton"));
-*/
 
 /*I used https://jshint.com/ for additional checking of code, this is to tell checker that my code is using functionalities from EcmaScript 6:*/
 /*jshint esversion: 6 */
@@ -107,7 +99,7 @@ document.getElementById("checkBoxes").addEventListener('click', function() {
     }
 });
 
-//Event listener for station search -box:
+//Event listener for station search -box's button:
 document.getElementById("stationSearchByNameButton").addEventListener('click', function() {
   dealWithStationSearch()
 });
@@ -151,7 +143,6 @@ document.getElementById("stationsearchByName").addEventListener('keyup', functio
 document.getElementById("searchSuggestions").addEventListener('click', function() {
   //https://stackoverflow.com/questions/63199551/how-to-get-the-values-of-buttons-with-eventlistener
   const clickedButton = event.target;
-  console.log(clickedButton.value);
   document.getElementById("stationsearchByName").value = clickedButton.value;
   dealWithStationSearch();
 });
@@ -212,8 +203,6 @@ function dealWithStationSearch() {
   if (nameFoundFrom) {
     // Get the index of the object, stored in variable.
     const nameFoundFromIndex = trainStations.indexOf(nameFoundFrom);
-    //console.log(trainStations[entryIndex].stationName);
-    //console.log("Hakuasema: " + trainStations[nameFoundFromIndex].stationShortCode);
     lastChanged="searchbutton";
     document.getElementById("stationsearch").value=trainStations[nameFoundFromIndex].stationShortCode;
     initializeLoad(lastChanged);
@@ -237,7 +226,7 @@ function checkboxdelay() {
   } else if (checkBoxDelayAmount > 100) {
     checkBoxDelayAmount = checkBoxDelayAmount -100;
   } else {
-    console.log("Something unplanned on checkboxdelay -function.");
+    console.error("Something unplanned on checkboxdelay -function.");
   }
 }
 
@@ -258,7 +247,7 @@ function initializeLoad(fromwhere) {
     //Search entries in JSON:
     //https://rata.digitraffic.fi/api/v1/metadata/stations (107kb)
   } else {
-    console.log("initializeLoad " +fromwhere+" didn't get correct arguments.");
+    console.error("initializeLoad " +fromwhere+" didn't get correct arguments.");
     return false;
   }
   //For debug purposes, set target station to kouvola, which produces errors:
@@ -358,7 +347,6 @@ function checkboxwhitening() {
 //Async when fetching from web.
 async function datafetch(startParameters) {
   //When playing with production data, make this function to expect string as input and give that string as parameter to next line instead of sample data.
-  //console.log(fetchurl);
   //Choose sample or production data:
   //fetch('Datasample.json')
   //Sample data from kouvola 26.4.2024 which produces errors cell/row changes:
@@ -397,7 +385,6 @@ async function datafetch(startParameters) {
     } catch (error) {
       console.error('There was a problem with the fetch operation:', error);
     }
-    //console.log("Traintypes noudettu: "+trainTypes);
     //Initial data load:
     initializeLoad("dropdown");
   } else {
@@ -477,8 +464,6 @@ function loadData(inputdata) {
     //Moved from inner loop:
     lastTrainLetter = obj.commuterLineID;
     lastTrainDestination = obj.timeTableRows[obj.timeTableRows.length-1].stationShortCode;
-    //console.log("obj trainnumber: "+obj.trainNumber);
-    //lastTrainTypeAndNumber = obj.trainType+obj.trainNumber;
     lastTrainType = obj.trainType;
     lastTrainNumber = obj.trainNumber;
     obj.timeTableRows.forEach(ttrow => {
@@ -712,7 +697,7 @@ async function populatetable(dataarray) {
       arrivalsPosition = 1;
       trainNumberPosition = 6;
     } else {
-      console.log("Populatetable didn't find selected departures or arrivals.")
+      console.error("Populatetable didn't find selected departures or arrivals.")
     }
   }
 //Sort arrays by wanted sorting order:
@@ -730,17 +715,12 @@ if (sortorder.value == 0) {
 } else if (sortorder.value == 3) {
  arrayOfArrays.sort((b, a) => a[arrivalsPosition] - b[arrivalsPosition]);
 } else if (sortorder.value == 4) {
-  //console.log("Sort 4");
   arrayOfArrays.sort((a, b) => a[trainNumberPosition] - b[trainNumberPosition]);
 } else if (sortorder.value == 5) {
-  //console.log("Sort 5");
   arrayOfArrays.sort((b, a) => a[trainNumberPosition] - b[trainNumberPosition]);
-  //console.log("Arrayofarray kokonaisuudessaan sortissa: "+ arrayOfArrays);
-  //console.log(arrayOfArrays[trainNumberPosition-1]+arrayOfArrays[trainNumberPosition]+arrayOfArrays[trainNumberPosition+1]);
-} else {
-  console.log("Populatetable didn't get correct sort order parameter.")
+  } else {
+  console.error("Populatetable didn't get correct sort order parameter.")
 }
-
   //Define different table's components:
   const targetdiv = document.getElementById('contentbyscript');
   const Table = document.createElement('table');
@@ -799,7 +779,6 @@ nonPassengerTrainTypes = [];
 trainTypes.forEach(type => {
   if (type.trainCategory.name != "Commuter" && type.trainCategory.name !="Long-distance"){
     nonPassengerTrainTypes.push(type.name);
-    //console.log(type.name);
   }
 });
 //Used for making new row element at start of loop:
@@ -867,8 +846,6 @@ arrayOfArrays.forEach(arrayEntries => {
           } else {
             //If second time entry isn't date object and secondDate -statement above has set arrayEntryIncrement to 0, set it back to 1 so function continues on.
             //Cleans also trains from terminal stations, which have only arrival/departure time, in case of opposite is selected.
-            //console.log("populatetable hit non-date mark on date field");
-            //rowOfInterest = false;
 
             //29.4.2024: Explanations for codes, which are added to aid sorting:
             if (obj=="Line start") {
@@ -909,7 +886,6 @@ arrayOfArrays.forEach(arrayEntries => {
             if (codeContainingObject) {
               // Get the index of the entry
               var entryIndex = trainStations.indexOf(codeContainingObject);
-              //console.log(trainStations[entryIndex].stationName);
               window['iterated'+tableComponentNumber].textContent = trainStations[entryIndex].stationName;
             } else {
               window['iterated'+tableComponentNumber].textContent = obj;
@@ -938,7 +914,7 @@ arrayOfArrays.forEach(arrayEntries => {
           }
           arrayEntryNumber ++;
         } else {
-          console.log("Populatetable condition 4 (Else. Shouldn't never appear)");
+          console.error("Populatetable condition 4 (Else. Shouldn't never appear)");
         }
         //tableComponentNumber = tableComponentNumber + tableComponentNumberIncrement;
         tableComponentNumber++;

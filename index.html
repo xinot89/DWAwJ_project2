@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Project 2
     </title>
-    <link rel="stylesheet" href="styles.css"/>
+    <link rel="stylesheet" href="styles.css">
 </head>
 <body>
     <div id="taskbrief">
@@ -50,32 +50,30 @@
                 <option value="TKL">Tikkurila</option>
             </select>
             <p>
-            Or type in station's code:<br><input id="stationsearch" /><button id="stationSearchButton">Search</button><!--<span id="cityerroroutput"></span>-->
+            Enter station code:<br><input id="stationsearch"><button id="stationSearchButton">Search</button><!--<span id="cityerroroutput"></span>-->
             </p>
             <p>
-                Or station's &lpar;exact&rpar; name:<br><input id="stationsearchByName" /><button id="stationSearchByNameButton">Search</button>
-                <br><div id="searchSuggestions"></div>
-                <br><span id="cityerroroutput"></span>
+                Or search by station's name:<br>
+                <input id="stationsearchByName"><button id="stationSearchByNameButton">Search</button>
+                <br><span id="searchSuggestions"></span>
             </p>
-            <p>
-            <legend>Count of trains to fetch:</legend>
+            Count of trains to fetch:
             <div>
-              <input type="radio" id="radio_5" name="howManyToFetch" value="5" checked/>
+              <input type="radio" id="radio_5" name="howManyToFetch" value="5" checked>
               <label for="radio_5">5 (Default)</label>
             </div>
             <div>
-              <input type="radio" id="radio_10" name="howManyToFetch" value="10"/>
+              <input type="radio" id="radio_10" name="howManyToFetch" value="10">
               <label for="radio_10">10</label>
             </div>
             <div>
-              <input type="radio" id="radio_20" name="howManyToFetch" value="20"/>
+              <input type="radio" id="radio_20" name="howManyToFetch" value="20">
               <label for="radio_20">20</label>
             </div>
             <div>
-                <input type="radio" id="radio_40" name="howManyToFetch" value="40"/>
+                <input type="radio" id="radio_40" name="howManyToFetch" value="40">
                 <label for="radio_40">40</label>
             </div>
-            </p>
         </div>
         <div class="item">
             <div id="checkBoxes">

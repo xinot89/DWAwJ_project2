@@ -117,8 +117,6 @@ document.getElementById("stationsearchByName").addEventListener('keyup', functio
   var suggestionNumber = 0;
   //Change query's first letter to uppercase:
   const modSearchSuggestionQuery = searchSuggestionQuery[0].toUpperCase()+searchSuggestionQuery.slice(1);
-  //Variable to limit given suggestions:
-  var suggestionCount = 5;
   //Array to store suggestions:
   var suggestionArray = [];
   //Saves each filtered method to new array, where each entry has passed contidion includes(searchSuggestionQuery)

@@ -406,13 +406,6 @@ async function datafetch(startParameters) {
     });
   }
 }
-function fetchTrainTypes() {
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      resolve('resolved');
-    }, 2000);
-  });
-}
 
 /*Function to load data to array.
 Originally this function was used to put tata into table,

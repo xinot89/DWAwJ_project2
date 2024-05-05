@@ -248,8 +248,8 @@ function initializeLoad(fromwhere) {
     console.error("initializeLoad " +fromwhere+" didn't get correct arguments.");
     return false;
   }
-  //For debug purposes, set target station to kouvola, which produces errors:
-  targetStation = "HKI"
+  //Station setting for debug purposes:
+  //targetStation = "HKI"
   //Get entries to fetch:
   //fetchcount = document.getElementsByName("howManyToFetch").values;
 
@@ -390,8 +390,8 @@ async function datafetch(startParameters) {
     initializeLoad("dropdown");
   } else {
     //Train/timetable data:
-    //await fetch(fetchurl)
-    fetch ("HKI_5.5.2024.json")
+    await fetch(fetchurl)
+    //fetch ("HKI_5.5.2024_debug2.json")
     
     .then(response => {
       if (!response.ok) {
@@ -406,6 +406,7 @@ async function datafetch(startParameters) {
       console.error('There was a problem with the fetch operation:', error);
     });
   }
+  //console.log(fetchurl)
 }
 
 /*Function to load data to array.*/
@@ -416,7 +417,7 @@ function loadData(inputdata) {
   Each timetablerow sets this to one it's currently processing:
   Set laststation to visible value so that it's noticeable, if it pops out somewhere.
   Hasn't popped yet anywhere.*/ 
-  lastStation = "noHitsYet";
+  lastStation = "";
   /*My implementation uses mostly same loop for timetablerows to do data saving to array and get data from source data.
   Previous train's station timetable is saved when new train's handling starts and if entry is last in source data, saveOnLast -boolean gets set and this function stores
   datas in array at the loop's end.*/
@@ -473,7 +474,6 @@ function loadData(inputdata) {
       //If station of interest is last in timetablerows, use save functionality after all if clauses instead of next round's.
       if (ttrow.stationShortCode == targetStation && timetablerow == obj.timeTableRows.length) {
         lastTimeTableRow = true;
-        //HL8100 Viimeinen timetabhlerow tiedostettu.
       }
       //Station code for comparison below:
       currentStation = ttrow.stationShortCode;
@@ -483,6 +483,9 @@ function loadData(inputdata) {
         One example of this is T2241 which departs from Kouvola, goes to Kouvola tavara and then back to Kouvola.*/
         stoppingIndicatorNotInserted = true;
         targetStationPassed = true;
+        if (obj.trainNumber==8663 && ttrow.stationShortCode =="HKI") {
+          console.log(obj)
+        }   
       }
       /*
       For each timetablerow, we first check that is this continuing old entry (savedTimes already present.
@@ -511,6 +514,8 @@ function loadData(inputdata) {
               timetableEntries.push(delayedArrivalTime);
               //Reset time variable to reduce likelihood of mixing up times:
               delayedArrivalTime=null;
+              //5.5.2024: Added following to reset state of time acquirement due to cases where train starts and terminates from same station (e.g. P&I trains from/to Helsinki).
+              lacksArrival=true;
             }
           }
           if (departingBoolean) {
@@ -523,6 +528,8 @@ function loadData(inputdata) {
             } else {
             timetableEntries.push(delayedDepartureTime);
             delayedDepartureTime=null;
+            //5.5.2024: Added following to reset state of time acquirement due to cases where train starts and terminates from same station (e.g. P&I trains from/to Helsinki).
+            lacksDeparture=true;
             }
           }
           //Save track number data:
@@ -547,13 +554,11 @@ function loadData(inputdata) {
       }
 
       if (arrivingBoolean && currentStation == targetStation && type == "ARRIVAL") {
-        //HL8100 ARRIVAL LÖYTYY
         //Put Yes/no in start of array entry to indicate if this train stops on target station:
         if (stoppingIndicatorNotInserted) {
           if (ttrow.commercialStop) {
             timetableEntries.push("Yes.");
             stoppingIndicatorNotInserted=false;
-            //HL 8100 laitettu.
           } else {
           timetableEntries.push("No.");
           stoppingIndicatorNotInserted=false;
@@ -598,7 +603,6 @@ function loadData(inputdata) {
             lastCommercialTrack="n/a";
           } else {
             lastCommercialTrack = ttrow.commercialTrack;
-            //timetableEntries.push(ttrow.commercialTrack);
           }
         }
         lastStation = currentStation;
@@ -822,6 +826,7 @@ async function populatetable(dataarray) {
     }
       //Following iterates through every object in data-array and returns train number and other data on same level:
       arrayEntries.forEach(obj => {
+        console.log(obj);
         //If subarray has been marked uninteresting, we may skip it's processing:
         if (rowOfInterest) {
           if (firstloop) {

@@ -826,7 +826,6 @@ async function populatetable(dataarray) {
     }
       //Following iterates through every object in data-array and returns train number and other data on same level:
       arrayEntries.forEach(obj => {
-        console.log(obj);
         //If subarray has been marked uninteresting, we may skip it's processing:
         if (rowOfInterest) {
           if (firstloop) {

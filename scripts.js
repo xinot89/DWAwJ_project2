@@ -718,23 +718,36 @@ if (sortorder.value == 0) {
   //Define different table's components:
   const targetdiv = document.getElementById('contentbyscript');
   const Table = document.createElement('table');
-  //Table's heading -part:
   const TableHead = document.createElement('thead');
   const TableBody = document.createElement('tbody');
+  //Table's heading -part:
+  //Heading row for "now showing" needs unique name to avoid being ovewritten by next row.
+  const NowShowingHeadingRow = document.createElement('tr');
+  //I also created cell to textcontent, so i can set colspan for it:
+  const NowShowingHeadingCell = document.createElement('th');
+  //Heading row for table data explanations:
   const TableHeadingRow = document.createElement('tr');
-  //Table's heading cells:
+  //Define table's heading cells:
   const doesTrainStop = document.createElement('th');
-  //const ArrivedTime = document.createElement('th');
   const ArrivingTime = document.createElement('th');
-  //const DepartedTime = document.createElement('th');
   const DepartureTime = document.createElement('th');
   const TrackNumber = document.createElement('th');
-
   const TrainLetter = document.createElement("th");
   const TrainDestination = document.createElement("th");
   const TrainNumber = document.createElement("th");
 
 //Create needed heading -columns to table:
+//First, there's "now showing" -heading row for clarity, as at the moment there's 3 elements where station can be selected:
+NowShowingHeadingCell.textContent="Now showing: "+ targetStation;
+//Set colspan to 5, so "Now showing goes in middle of table's top:"
+/*Fixed colspan causes "Now showing" to shift left if non-stopping trains or both, departure and arrival times are selected
+But this problem seems so minor that adding variables to set colspan isn't worth it. */
+NowShowingHeadingCell.setAttribute("colspan", "5");
+//Append cell to row:
+NowShowingHeadingRow.appendChild(NowShowingHeadingCell);
+//Append row to table's "head" -part.
+TableHead.appendChild(NowShowingHeadingRow);
+//If non-stopping trains are selected, make separate marking if the train stops or not.
 if (nonStoppingBoolean) {
   doesTrainStop.textContent="Stopping?";
   TableHeadingRow.appendChild(doesTrainStop);
@@ -747,27 +760,31 @@ if (departingBoolean) {
   DepartureTime.textContent ="Departure";
   TableHeadingRow.appendChild(DepartureTime);
 }
+//Create column explanation texts for fixed data cells and append then to table's heading row:
 TrackNumber.textContent ="Track";
 TableHeadingRow.appendChild(TrackNumber);
-
 TrainLetter.textContent = "Line";
 TrainDestination.textContent ="Destination";
 TableHeadingRow.appendChild(TrainLetter);
 TableHeadingRow.appendChild(TrainDestination);
 TrainNumber.textContent ="Train number";
 TableHeadingRow.appendChild(TrainNumber);
-//Put row created in previous step to table heading -element:
+//Put heading row, created in previous step to table heading -element:
 TableHead.appendChild(TableHeadingRow);
 //Put created table heading -section to table:
 Table.appendChild(TableHead);
 
-//Rolling number for cells which got their contents via dynamix variables.
+/*I Used dynamic variables so i don't have to manually define names for variables one by one.
+At first, i was also planning to use those and subarrays also on function loadData but reverted to current,
+single array system with separator as loadData's core logic was puzzling enough at the point of initial development.*/
+
+//Rolling number for cells which got their contents via dynamic variables.
 tableComponentNumber = 0;
 //Rolling number for table content rows.
 //Needs to be separate from cells because othervise all cells would be appended to one line.
 tableRowNumber = 0;
 
-//Array for non-passenger trains:
+//Array for non-passenger trains, gets types from api.:
 nonPassengerTrainTypes = [];
 //Go through train types:
 trainTypes.forEach(type => {
@@ -775,17 +792,20 @@ trainTypes.forEach(type => {
     nonPassengerTrainTypes.push(type.name);
   }
 });
-//Used for making new row element at start of loop:
+//This makes new row element at start of first train's data which contain relevant information:
 firstloop = true;
+//This forEach loop goes through each train's data:
 arrayOfArrays.forEach(arrayEntries => {
+  //EntryCount is recorded that we can compare each timetable row to amount of total entries and thus know, when we are at last timetable entry.
   let entryCount = arrayEntries.length;
 
-  /*Declare variable here, so it provides usable data for
-  TableBody.appendChild(window['iteratedTableRow'+tableRowNumber]);
-  Whether to save row or not.*/
-  //Solely rowOfInterest is used to keep non-stopping trains away from table if they haven't been requested.
+  //rowOfInterest is used to keep non-stopping trains away from table if they haven't been requested.
+  //Also used, when sorting by departures to filter out trains that terminate on selected station. (or similarly arrivals + line start.)
+  //Used also to filter out non passenger trains.
   rowOfInterest = true;
+  //This variable is to easily select proper handling for each of timetable-entries and to get train's data to row's end when wanted timetable data's are listed:
   arrayEntryNumber = 0;
+  //This variable is used to apply date object handling twice, in case that both arrivals and departures are selected.
   secondDate = false
   //Compares, if current train's type is found in nonPassengerTrainTypes:
   if (nonPassengerTrainBoolean == false && nonPassengerTrainTypes.includes(arrayEntries[entryCount-2])) {
@@ -797,6 +817,7 @@ arrayOfArrays.forEach(arrayEntries => {
       if (rowOfInterest) {
         if (firstloop) {
           //Create new row -element for first row of data:
+          //For next trains, new rows are created after this arrayEntries.forEach -loop which handles timetable entries.
           window['iteratedTableRow'+tableRowNumber] = document.createElement('tr');
           firstloop = false;
         }
@@ -812,36 +833,37 @@ arrayOfArrays.forEach(arrayEntries => {
             rowOfInterest = false;
           }
           arrayEntryNumber ++;
+          //Following clause handles first date object of subarray and checks if next object is also date object.
+          //If so, this clause get's executed again by secondDate -boolean.
         } else if (rowOfInterest && arrayEntryNumber == 1 || arrayEntryNumber == 2 && secondDate) {
-          //Increment to arrayEntrynumber which sets to 0 on potential second run of this condition:
-          //arrayEntryIncrement = 1;
-          //This condition is intended for train times.
+          //Reset secondDate if it's set:
           if (secondDate) {
-            //In case this condition is run again by secondDate, set arrayentrynumber 1 step back so remaining conditions can run:
-            //arrayEntryIncrement = 0;
-            //arrayEntryNumber--;
-            //if this condition is run again by secondDate, reset it:
             secondDate = false;
           }
           //Make sure at first that this entry is date entry:
           if (obj instanceof Date) {
+            //Convert date object's unix -timestamp to hours+minutes+seconds:
             hours = obj.getHours();
             minutes = obj.getMinutes();
             seconds = obj.getSeconds();
-            //Add leading zero to minutes if minute -value < 10
+            //Add leading zero to minutes and seconds if value < 10
             minutes = minutes < 10 ? "0" + minutes : minutes;
             seconds = seconds < 10 ? "0" + seconds : seconds;
+            //Create cell with rolling number in variable name:
             window['iterated'+tableComponentNumber] = document.createElement('td');
+            //Set cell's value to hours:
             window['iterated'+tableComponentNumber].textContent = hours;
+            //Append : + minutes/seconds to that cell.
             window['iterated'+tableComponentNumber].textContent += ":"+minutes;
             window['iterated'+tableComponentNumber].textContent += ":"+seconds;
+            //Append cell with time to current train's table row:
             window['iteratedTableRow'+tableRowNumber].appendChild(window['iterated'+tableComponentNumber]);
+            //After this clause is executed, cell is done and we can increment cells number by one, to get clear cell for next entries:
             tableComponentNumber +=1;
           } else {
-            //If second time entry isn't date object and secondDate -statement above has set arrayEntryIncrement to 0, set it back to 1 so function continues on.
+            //If there isn't time-entries in cells, where they should be, this checks if there's markings of line's start or termination, and appends that info to table as it is.
             //Cleans also trains from terminal stations, which have only arrival/departure time, in case of opposite is selected.
 
-            //29.4.2024: Explanations for codes, which are added to aid sorting:
             if (obj=="Line start") {
               //Refinement: If sorting is by arrivals, we probably don't want to see starting trains at all:
               if (sortorder.value == 2 || sortorder.value == 3) {
@@ -858,13 +880,11 @@ arrayOfArrays.forEach(arrayEntries => {
             window['iterated'+tableComponentNumber].textContent = obj;
             window['iteratedTableRow'+tableRowNumber].appendChild(window['iterated'+tableComponentNumber]);
             tableComponentNumber +=1;
-            //arrayEntryIncrement = 1;
           }
-          //Check if next obj is also timestamp, new round also, if there's termination code in next cell:
+          //Check if next obj is also timestamp. Triggers new round with secondDate also, if there's termination code in next array entry:
           if (arrayEntries[arrayEntryNumber+1] instanceof Date || arrayEntries[arrayEntryNumber+1] == "Terminates") {
             secondDate = true;
           }
-          //arrayEntryNumber = arrayEntryNumber + arrayEntryIncrement;
           arrayEntryNumber++;
         } else if (rowOfInterest && arrayEntryNumber > 1) {
           if (arrayEntryNumber == entryCount-3) {
@@ -891,8 +911,6 @@ arrayOfArrays.forEach(arrayEntries => {
             window['iterated'+tableComponentNumber] = document.createElement('td');
             //Put array position's contents into cell:
             window['iterated'+tableComponentNumber].textContent = obj;
-            //Pause incrementing of tableComponentNumber so train number comes into same cell:
-            //tableComponentNumberIncrement = 0;
             //Take 1 back of tablecomponentnumber, so when it gets additioned after these statements, it remains same for else if below.
             //This could probably also be made by using -1 on tablecomponentnumber below.
             tableComponentNumber --;

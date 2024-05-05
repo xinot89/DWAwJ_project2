@@ -38,11 +38,15 @@
                 </ul>
             </li>
         </ul>
+        Issues:
+        <ul>
+            <li>When sorting trains by departure time for example in Tampere while both, arrivals and departures are selected, sorting might not work properly when starting/terminating trains start to appear on array.</li>
+        </ul>
         <br>
     </div>
     <div id ="choosebar" class="container">
         <div class="item">
-            Choose station:
+            Preselected stations:
             <select name="mySelect" id="stationDropDown">
                 <option value="ML">Malmi</option>
                 <option value="TNA">Tapanila</option>
@@ -111,7 +115,8 @@
                 <option value=5>Train #, Descending</option>
             </select>
             <p>
-            
+            Sorting by arrivals hides trains which start their line from station.
+            <br> Sorting by departures also hides terminating trains.
             </p>
             <!--arrived_trains=","arriving_trains=","departed_trains=","departing_trains=","include_nonstopping=","train_categories=-->
         </div>

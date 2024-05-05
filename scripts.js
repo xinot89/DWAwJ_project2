@@ -249,7 +249,7 @@ function initializeLoad(fromwhere) {
     return false;
   }
   //For debug purposes, set target station to kouvola, which produces errors:
-  //targetStation = "KV"
+  targetStation = "HKI"
   //Get entries to fetch:
   //fetchcount = document.getElementsByName("howManyToFetch").values;
 
@@ -390,8 +390,9 @@ async function datafetch(startParameters) {
     initializeLoad("dropdown");
   } else {
     //Train/timetable data:
-    await fetch(fetchurl)
-
+    //await fetch(fetchurl)
+    fetch ("HKI_5.5.2024.json")
+    
     .then(response => {
       if (!response.ok) {
         throw new Error('Sample file loading was not ok');
@@ -472,6 +473,7 @@ function loadData(inputdata) {
       //If station of interest is last in timetablerows, use save functionality after all if clauses instead of next round's.
       if (ttrow.stationShortCode == targetStation && timetablerow == obj.timeTableRows.length) {
         lastTimeTableRow = true;
+        //HL8100 Viimeinen timetabhlerow tiedostettu.
       }
       //Station code for comparison below:
       currentStation = ttrow.stationShortCode;
@@ -545,11 +547,13 @@ function loadData(inputdata) {
       }
 
       if (arrivingBoolean && currentStation == targetStation && type == "ARRIVAL") {
+        //HL8100 ARRIVAL LÖYTYY
         //Put Yes/no in start of array entry to indicate if this train stops on target station:
         if (stoppingIndicatorNotInserted) {
           if (ttrow.commercialStop) {
             timetableEntries.push("Yes.");
             stoppingIndicatorNotInserted=false;
+            //HL 8100 laitettu.
           } else {
           timetableEntries.push("No.");
           stoppingIndicatorNotInserted=false;
@@ -575,7 +579,7 @@ function loadData(inputdata) {
         if (lastTimeTableRow) {
           saveOnLast = true;
         }
-      } else if(departingBoolean && currentStation == targetStation && type == "DEPARTURE") {
+      } else if (departingBoolean && currentStation == targetStation && type == "DEPARTURE") {
         if (stoppingIndicatorNotInserted) {
           if (ttrow.commercialStop) {
             timetableEntries.push("Yes.");
@@ -604,50 +608,50 @@ function loadData(inputdata) {
         }
       } 
 
-      if (saveOnLast && savedTimes) {        
-        if (targetStationPassed) {
-        //Reset targetStationPassed for next use:
-        targetStationPassed = false;
-        //Put "Not available" -entry to array if arrival/departure time is not available:
-        if (arrivingBoolean) {
-          if (lacksArrival) {
-            timetableEntries.push("Arrival n/a");
-          } else {
-            timetableEntries.push(delayedArrivalTime);
-            delayedArrivalTime=null;
-          }
-        }
-        if (departingBoolean) {
-          if (lacksDeparture) {
-            if (lastTimeTableRow) {
-              timetableEntries.push("Terminates")
+      if (saveOnLast && savedTimes) {     
+        if (targetStationPassed || lastTimeTableRow) {
+          //Reset targetStationPassed for next use:
+          targetStationPassed = false;
+          //Put "Not available" -entry to array if arrival/departure time is not available:
+          if (arrivingBoolean) {
+            if (lacksArrival) {
+              timetableEntries.push("Arrival n/a");
             } else {
-              timetableEntries.push("Departure n/a");
+              timetableEntries.push(delayedArrivalTime);
+              delayedArrivalTime=null;
             }
-          } else {
-          timetableEntries.push(delayedDepartureTime);
-          delayedDepartureTime=null;
+          }
+          if (departingBoolean) {
+            if (lacksDeparture) {
+              if (lastTimeTableRow) {
+                timetableEntries.push("Terminates")
+              } else {
+                timetableEntries.push("Departure n/a");
+              }
+            } else {
+            timetableEntries.push(delayedDepartureTime);
+            delayedDepartureTime=null;
+            }
+          }
+          if (trackSaver == "Departure" || trackSaver == "Arrival") {
+            timetableEntries.push(lastCommercialTrack);
           }
         }
-        if (trackSaver == "Departure" || trackSaver == "Arrival") {
-          timetableEntries.push(lastCommercialTrack);
+        //Save last train letter and destination only if there has been previous run.
+        if (lastStation.length >0) {
+          if (lastTrainLetter.length == 0) {
+            timetableEntries.push("-");
+          } else {
+            timetableEntries.push(lastTrainLetter);
+          }
+          timetableEntries.push(lastTrainDestination);
         }
-      }        
-      //Save last train letter and destination only if there has been previous run.
-      if (lastStation.length >0) {
-        if (lastTrainLetter.length == 0) {
-          timetableEntries.push("-");
-        } else {
-          timetableEntries.push(lastTrainLetter);
-        }
-        timetableEntries.push(lastTrainDestination);
-      }
-      timetableEntries.push(lastTrainType);
-      timetableEntries.push(lastTrainNumber);
-      //Save separator to array:
-      timetableEntries.push("NEWTRAIN_6b9d87b08a2ee")
-      savedTimes = false;
-      lastTimeTableRow = false;
+        timetableEntries.push(lastTrainType);
+        timetableEntries.push(lastTrainNumber);
+        //Save separator to array:
+        timetableEntries.push("NEWTRAIN_6b9d87b08a2ee")
+        savedTimes = false;
+        lastTimeTableRow = false;
       }
       timetablerow +=1;
       //Following line is end of ttrow -loop.

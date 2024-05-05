@@ -249,7 +249,7 @@ function initializeLoad(fromwhere) {
     return false;
   }
   //Station setting for debug purposes:
-  //targetStation = "HKI"
+  //targetStation = "TPE"
   //Get entries to fetch:
   //fetchcount = document.getElementsByName("howManyToFetch").values;
 
@@ -391,7 +391,7 @@ async function datafetch(startParameters) {
   } else {
     //Train/timetable data:
     await fetch(fetchurl)
-    //fetch ("HKI_5.5.2024_debug2.json")
+    //fetch ("TPE_5.5.2024_debug3.json")
     
     .then(response => {
       if (!response.ok) {
@@ -482,10 +482,7 @@ function loadData(inputdata) {
         /*Resetting also stopping indicator as some trains stop multiple times on same station.
         One example of this is T2241 which departs from Kouvola, goes to Kouvola tavara and then back to Kouvola.*/
         stoppingIndicatorNotInserted = true;
-        targetStationPassed = true;
-        if (obj.trainNumber==8663 && ttrow.stationShortCode =="HKI") {
-          console.log(obj)
-        }   
+        targetStationPassed = true;   
       }
       /*
       For each timetablerow, we first check that is this continuing old entry (savedTimes already present.
@@ -713,6 +710,26 @@ async function populatetable(dataarray) {
       console.error("Populatetable didn't find selected departures or arrivals.")
     }
   }
+//Following removals are initially to solve problem with strings messing up sorting:
+  //Remove terminating trains if sorting by departures:
+  if (sortorder.value == 0 || sortorder.value == 1) {
+    //I used for -loop because forEach did skip entries when i removed subarrays at iterations.
+    //Another option could be to just store entries numbers and splice them away backwards after forEach loop.
+    for (let i = arrayOfArrays.length - 1; i >= 0; i--) {
+      const timeTableEntryForSorting = arrayOfArrays[i];
+      if (timeTableEntryForSorting.includes("Terminates")) {
+          arrayOfArrays.splice(i, 1);
+      }
+    }
+    //Remove starting trains if sorting by arrivals:
+  } else if (sortorder.value == 2 || sortorder.value == 3) {
+    for (let i = arrayOfArrays.length - 1; i >= 0; i--) {
+      const timeTableEntryForSorting = arrayOfArrays[i];
+      if (timeTableEntryForSorting.includes("Line start")) {
+          arrayOfArrays.splice(i, 1);
+      }
+    }
+  }
   //Sort arrays by wanted sorting order:
   //0: departures, ascending:
   if (sortorder.value == 0) {
@@ -725,12 +742,12 @@ async function populatetable(dataarray) {
     arrayOfArrays.sort((a, b) => a[arrivalsPosition] - b[arrivalsPosition]);
   //3: arrivals, descending:
   } else if (sortorder.value == 3) {
-  arrayOfArrays.sort((b, a) => a[arrivalsPosition] - b[arrivalsPosition]);
+    arrayOfArrays.sort((b, a) => a[arrivalsPosition] - b[arrivalsPosition]);
   } else if (sortorder.value == 4) {
     arrayOfArrays.sort((a, b) => a[trainNumberPosition] - b[trainNumberPosition]);
   } else if (sortorder.value == 5) {
     arrayOfArrays.sort((b, a) => a[trainNumberPosition] - b[trainNumberPosition]);
-    } else {
+  } else {
     console.error("Populatetable didn't get correct sort order parameter.")
   }
   //Define different table's components:

@@ -407,19 +407,21 @@ async function datafetch(startParameters) {
   }
 }
 
-/*Function to load data to array.
-Originally this function was used to put tata into table,
-but i needed way to order trains by departure time so array offered simple -sounding solution to that.
-Because of this, there might be out of context comments.*/
+/*Function to load data to array.*/
 function loadData(inputdata) {
+  //Array to store all entries of interest:
   timetableEntries = [];
-  //Last station's code to compare between timetable runs.
-  //Each data addition sets these to one it's currently processing: 
+  /* Store last station's code to compare between timetable runs.
+  Each timetablerow sets this to one it's currently processing:
+  Set laststation to visible value so that it's noticeable, if it pops out somewhere.
+  Hasn't popped yet anywhere.*/ 
   lastStation = "noHitsYet";
+  /*My implementation uses mostly same loop for timetablerows to do data saving to array and get data from source data.
+  Previous train's station timetable is saved when new train's handling starts and if entry is last in source data, saveOnLast -boolean gets set and this function stores
+  datas in array at the loop's end.*/
   lastTrainLetter = "";
   lastTrainDestination ="";
   lastCommercialTrack = 0;
-  //lastTrainTypeAndNumber="";
   lastTrainType="";
   lastTrainNumber="";
   //Variables to store arrival and departure times until target station has passed, so we know whether to put real times in array or n/a:
@@ -427,21 +429,24 @@ function loadData(inputdata) {
   var delayedDepartureTime=null;
 
   //Should we take track number from Arrival or departure data reading:
-  //Modification 28.4.2024: Instead of 2 single if statemets, now only 1 combined.
+  //Modification 28.4.2024: Instead of 2 single if statements, now only 1 combined.
   //Both should yield same result point is not to get 2 track entries on array.
+  //Could probably simplified even more by just initially setting to arrival and if departingBoolean is true, to departure.
+  //....Probably this is completely unnecessary, as both departure and arrival should yield same track number, so whichever runs could save it.
   if (arrivingBoolean) {
     trackSaver="Arrival";
   } else if (departingBoolean) {
     trackSaver="Departure";
   }
+  //This loop goes through each train's data:
   inputdata.forEach(obj => {
-    //These variables are for mechanism to insert "---" in case of no departure entries and such:
+    //These variables are for mechanism to insert "---" in case of no departure entries:
     lacksArrival = true;
     lacksDeparture = true;
-    //Indicator for previous if target station has passed:
+    //Indicator if target station has passed, so loop saves whatever it gots.:
     targetStationPassed = false;
 
-    //Following integer helps timetablerows to recognize, if it's last run or not, so those train letters and destinations come to even last entries:
+    //Following integer helps timetablerows to recognize, if it's last entry of timetablerows or not, so also last timetable entries get train letters and destinations.
     //length starts from 1, so this is set to match it. Needs to be inside train loop that this gets resetted on every train.
     timetablerow = 1;
 
@@ -455,15 +460,16 @@ function loadData(inputdata) {
     //Variable to set boolean value on each train if there's stop on targetStation.
     stoppingIndicatorNotInserted = true;
 
-    //Moved from inner loop:
+    //These set current train's data to variables that retain then, until we start processing next train's data or saveOnLast gets set:
     lastTrainLetter = obj.commuterLineID;
     lastTrainDestination = obj.timeTableRows[obj.timeTableRows.length-1].stationShortCode;
     lastTrainType = obj.trainType;
     lastTrainNumber = obj.trainNumber;
+    //This loop starts processing invidual timetable rows:
     obj.timeTableRows.forEach(ttrow => {
       //Define timetable event type:
       type = ttrow.type;
-      //If station of interest is last, use save functionality after all if clauses instead of next round's.
+      //If station of interest is last in timetablerows, use save functionality after all if clauses instead of next round's.
       if (ttrow.stationShortCode == targetStation && timetablerow == obj.timeTableRows.length) {
         lastTimeTableRow = true;
       }
@@ -471,7 +477,7 @@ function loadData(inputdata) {
       currentStation = ttrow.stationShortCode;
       //check if target station is passed:
       if (lastStation==targetStation && currentStation != targetStation) {
-        /*Resetting also stopping indicator as train might stop multiple times on same station.
+        /*Resetting also stopping indicator as some trains stop multiple times on same station.
         One example of this is T2241 which departs from Kouvola, goes to Kouvola tavara and then back to Kouvola.*/
         stoppingIndicatorNotInserted = true;
         targetStationPassed = true;
@@ -487,27 +493,37 @@ function loadData(inputdata) {
         if (targetStationPassed) {
           //Reset targetStationPassed for next use:
           targetStationPassed = false;
-          //Put "Not available" -entry to array if arrival/departure time is not available:
           if (arrivingBoolean) {
+            //Handle storing of arrival time.
             if (lacksArrival) {
+              //Handle situation, if arrival time is unavailable.
               if (timetablerow == 2) {
+                //If we're left target station at second timetable row and arrival time is requested but not recorded we may assume that train has begin it's journey from our station of interest. 
                 timetableEntries.push("Line start")
               } else {
+                //In other cases (not yet encountered) just state that arrival time is unavailable.
                 timetableEntries.push("Arrival n/a");
               }
             } else {
+              //If arrival time is available, put it into train's array as it is:
               timetableEntries.push(delayedArrivalTime);
+              //Reset time variable to reduce likelihood of mixing up times:
               delayedArrivalTime=null;
             }
           }
           if (departingBoolean) {
+            //This handles departure time saving.
+            //Scenario where train terminates on station has purposefully omitted from here as those scenarios are handled by similar saving mechanism
+            //on end of this loop which triggers if variables saveOnLast && savedTimes are set.
             if (lacksDeparture) {
+              //If train has changed, but requested departure time hasn't been saved:
               timetableEntries.push("Departure n/a");
             } else {
             timetableEntries.push(delayedDepartureTime);
             delayedDepartureTime=null;
             }
           }
+          //Save track number data:
           if (trackSaver == "Departure" || trackSaver == "Arrival") {
             timetableEntries.push(lastCommercialTrack);
           }
@@ -604,7 +620,6 @@ function loadData(inputdata) {
         if (departingBoolean) {
           if (lacksDeparture) {
             if (lastTimeTableRow) {
-              //-1000 For "Terminates" (Number that sorting by departure puts entry in reasonable place)
               timetableEntries.push("Terminates")
             } else {
               timetableEntries.push("Departure n/a");
@@ -627,7 +642,6 @@ function loadData(inputdata) {
         }
         timetableEntries.push(lastTrainDestination);
       }
-      //timetableEntries.push(lastTrainTypeAndNumber);
       timetableEntries.push(lastTrainType);
       timetableEntries.push(lastTrainNumber);
       //Save separator to array:
@@ -639,8 +653,6 @@ function loadData(inputdata) {
       //Following line is end of ttrow -loop.
     });
   });
-  //Sort array's contents by time:
-
   //Make sure that populatetable's dataarrayStore is empty, before it ads current data to it:
   dataarrayStore.length = 0;
   //Finally, call function to put array's data to table:
@@ -672,8 +684,7 @@ async function populatetable(dataarray) {
         }
     }
   }
-
-//Define where dates are by selections:
+  //Define where dates are by selections:
   if (departingBoolean) {
     departuresPosition = 1;
     trainNumberPosition = 6;
@@ -694,27 +705,26 @@ async function populatetable(dataarray) {
       console.error("Populatetable didn't find selected departures or arrivals.")
     }
   }
-//Sort arrays by wanted sorting order:
-
-//0: departures, ascending:
-if (sortorder.value == 0) {
-  arrayOfArrays.sort((a, b) => a[departuresPosition] - b[departuresPosition]);
-//1: departures, descending:
-} else if (sortorder.value == 1) {
-  arrayOfArrays.sort((b, a) => a[departuresPosition] - b[departuresPosition]);
-//2: arrivals, ascending:
-} else if (sortorder.value == 2) {
-  arrayOfArrays.sort((a, b) => a[arrivalsPosition] - b[arrivalsPosition]);
-//3: arrivals, descending:
-} else if (sortorder.value == 3) {
- arrayOfArrays.sort((b, a) => a[arrivalsPosition] - b[arrivalsPosition]);
-} else if (sortorder.value == 4) {
-  arrayOfArrays.sort((a, b) => a[trainNumberPosition] - b[trainNumberPosition]);
-} else if (sortorder.value == 5) {
-  arrayOfArrays.sort((b, a) => a[trainNumberPosition] - b[trainNumberPosition]);
-  } else {
-  console.error("Populatetable didn't get correct sort order parameter.")
-}
+  //Sort arrays by wanted sorting order:
+  //0: departures, ascending:
+  if (sortorder.value == 0) {
+    arrayOfArrays.sort((a, b) => a[departuresPosition] - b[departuresPosition]);
+  //1: departures, descending:
+  } else if (sortorder.value == 1) {
+    arrayOfArrays.sort((b, a) => a[departuresPosition] - b[departuresPosition]);
+  //2: arrivals, ascending:
+  } else if (sortorder.value == 2) {
+    arrayOfArrays.sort((a, b) => a[arrivalsPosition] - b[arrivalsPosition]);
+  //3: arrivals, descending:
+  } else if (sortorder.value == 3) {
+  arrayOfArrays.sort((b, a) => a[arrivalsPosition] - b[arrivalsPosition]);
+  } else if (sortorder.value == 4) {
+    arrayOfArrays.sort((a, b) => a[trainNumberPosition] - b[trainNumberPosition]);
+  } else if (sortorder.value == 5) {
+    arrayOfArrays.sort((b, a) => a[trainNumberPosition] - b[trainNumberPosition]);
+    } else {
+    console.error("Populatetable didn't get correct sort order parameter.")
+  }
   //Define different table's components:
   const targetdiv = document.getElementById('contentbyscript');
   const Table = document.createElement('table');
@@ -735,203 +745,196 @@ if (sortorder.value == 0) {
   const TrainLetter = document.createElement("th");
   const TrainDestination = document.createElement("th");
   const TrainNumber = document.createElement("th");
-
-//Create needed heading -columns to table:
-//First, there's "now showing" -heading row for clarity, as at the moment there's 3 elements where station can be selected:
-NowShowingHeadingCell.textContent="Now showing: "+ targetStation;
-//Set colspan to 5, so "Now showing goes in middle of table's top:"
-/*Fixed colspan causes "Now showing" to shift left if non-stopping trains or both, departure and arrival times are selected
-But this problem seems so minor that adding variables to set colspan isn't worth it. */
-NowShowingHeadingCell.setAttribute("colspan", "5");
-//Append cell to row:
-NowShowingHeadingRow.appendChild(NowShowingHeadingCell);
-//Append row to table's "head" -part.
-TableHead.appendChild(NowShowingHeadingRow);
-//If non-stopping trains are selected, make separate marking if the train stops or not.
-if (nonStoppingBoolean) {
-  doesTrainStop.textContent="Stopping?";
-  TableHeadingRow.appendChild(doesTrainStop);
-}
-if (arrivingBoolean) {
-  ArrivingTime.textContent = "Arriving";
-  TableHeadingRow.appendChild(ArrivingTime);
-}
-if (departingBoolean) {
-  DepartureTime.textContent ="Departure";
-  TableHeadingRow.appendChild(DepartureTime);
-}
-//Create column explanation texts for fixed data cells and append then to table's heading row:
-TrackNumber.textContent ="Track";
-TableHeadingRow.appendChild(TrackNumber);
-TrainLetter.textContent = "Line";
-TrainDestination.textContent ="Destination";
-TableHeadingRow.appendChild(TrainLetter);
-TableHeadingRow.appendChild(TrainDestination);
-TrainNumber.textContent ="Train number";
-TableHeadingRow.appendChild(TrainNumber);
-//Put heading row, created in previous step to table heading -element:
-TableHead.appendChild(TableHeadingRow);
-//Put created table heading -section to table:
-Table.appendChild(TableHead);
-
-/*I Used dynamic variables so i don't have to manually define names for variables one by one.
-At first, i was also planning to use those and subarrays also on function loadData but reverted to current,
-single array system with separator as loadData's core logic was puzzling enough at the point of initial development.*/
-
-//Rolling number for cells which got their contents via dynamic variables.
-tableComponentNumber = 0;
-//Rolling number for table content rows.
-//Needs to be separate from cells because othervise all cells would be appended to one line.
-tableRowNumber = 0;
-
-//Array for non-passenger trains, gets types from api.:
-nonPassengerTrainTypes = [];
-//Go through train types:
-trainTypes.forEach(type => {
-  if (type.trainCategory.name != "Commuter" && type.trainCategory.name !="Long-distance"){
-    nonPassengerTrainTypes.push(type.name);
+  //Create needed heading -columns to table:
+  //First, there's "now showing" -heading row for clarity, as at the moment there's 3 elements where station can be selected:
+  NowShowingHeadingCell.textContent="Now showing: "+ targetStation;
+  //Set colspan to 5, so "Now showing goes in middle of table's top:"
+  /*Fixed colspan causes "Now showing" to shift left if non-stopping trains or both, departure and arrival times are selected
+  But this problem seems so minor that adding variables to set colspan isn't worth it. */
+  NowShowingHeadingCell.setAttribute("colspan", "5");
+  //Append cell to row:
+  NowShowingHeadingRow.appendChild(NowShowingHeadingCell);
+  //Append row to table's "head" -part.
+  TableHead.appendChild(NowShowingHeadingRow);
+  //If non-stopping trains are selected, make separate marking if the train stops or not.
+  if (nonStoppingBoolean) {
+    doesTrainStop.textContent="Stopping?";
+    TableHeadingRow.appendChild(doesTrainStop);
   }
-});
-//This makes new row element at start of first train's data which contain relevant information:
-firstloop = true;
-//This forEach loop goes through each train's data:
-arrayOfArrays.forEach(arrayEntries => {
-  //EntryCount is recorded that we can compare each timetable row to amount of total entries and thus know, when we are at last timetable entry.
-  let entryCount = arrayEntries.length;
-
-  //rowOfInterest is used to keep non-stopping trains away from table if they haven't been requested.
-  //Also used, when sorting by departures to filter out trains that terminate on selected station. (or similarly arrivals + line start.)
-  //Used also to filter out non passenger trains.
-  rowOfInterest = true;
-  //This variable is to easily select proper handling for each of timetable-entries and to get train's data to row's end when wanted timetable data's are listed:
-  arrayEntryNumber = 0;
-  //This variable is used to apply date object handling twice, in case that both arrivals and departures are selected.
-  secondDate = false
-  //Compares, if current train's type is found in nonPassengerTrainTypes:
-  if (nonPassengerTrainBoolean == false && nonPassengerTrainTypes.includes(arrayEntries[entryCount-2])) {
-    rowOfInterest = false;
+  if (arrivingBoolean) {
+    ArrivingTime.textContent = "Arriving";
+    TableHeadingRow.appendChild(ArrivingTime);
   }
-    //Following iterates through every object in data-array and returns train number and other data on same level:
-    arrayEntries.forEach(obj => {
-      //If subarray has been marked uninteresting, we may skip it's processing:
-      if (rowOfInterest) {
-        if (firstloop) {
-          //Create new row -element for first row of data:
-          //For next trains, new rows are created after this arrayEntries.forEach -loop which handles timetable entries.
-          window['iteratedTableRow'+tableRowNumber] = document.createElement('tr');
-          firstloop = false;
-        }
-        //Yes/no if non-stopping trains have been selected:
-        if (arrayEntryNumber == 0) {
-          if (nonStoppingBoolean) {
-            window['iterated'+tableComponentNumber] = document.createElement('td');
-            window['iterated'+tableComponentNumber].textContent = obj;
-            window['iteratedTableRow'+tableRowNumber].appendChild(window['iterated'+tableComponentNumber]);
-            tableComponentNumber ++;
-          } else if (obj == "No.") {
-            //If non-stopping trains haven't requested and stop -indicator is "No." skip that entry.
-            rowOfInterest = false;
+  if (departingBoolean) {
+    DepartureTime.textContent ="Departure";
+    TableHeadingRow.appendChild(DepartureTime);
+  }
+  //Create column explanation texts for fixed data cells and append then to table's heading row:
+  TrackNumber.textContent ="Track";
+  TableHeadingRow.appendChild(TrackNumber);
+  TrainLetter.textContent = "Line";
+  TrainDestination.textContent ="Destination";
+  TableHeadingRow.appendChild(TrainLetter);
+  TableHeadingRow.appendChild(TrainDestination);
+  TrainNumber.textContent ="Train number";
+  TableHeadingRow.appendChild(TrainNumber);
+  //Put heading row, created in previous step to table heading -element:
+  TableHead.appendChild(TableHeadingRow);
+  //Put created table heading -section to table:
+  Table.appendChild(TableHead);
+  /*I Used dynamic variables so i don't have to manually define names for variables one by one.
+  At first, i was also planning to use those and subarrays also on function loadData but reverted to current,
+  single array system with separator as loadData's core logic was puzzling enough at the point of initial development.*/
+  //Rolling number for cells which got their contents via dynamic variables.
+  tableComponentNumber = 0;
+  //Rolling number for table content rows.
+  //Needs to be separate from cells because othervise all cells would be appended to one line.
+  tableRowNumber = 0;
+  //Array for non-passenger trains, gets types from api.:
+  nonPassengerTrainTypes = [];
+  //Go through train types:
+  trainTypes.forEach(type => {
+    if (type.trainCategory.name != "Commuter" && type.trainCategory.name !="Long-distance"){
+      nonPassengerTrainTypes.push(type.name);
+    }
+  });
+  //This makes new row element at start of first train's data which contain relevant information:
+  firstloop = true;
+  //This forEach loop goes through each train's data:
+  arrayOfArrays.forEach(arrayEntries => {
+    //EntryCount is recorded that we can compare each timetable row to amount of total entries and thus know, when we are at last timetable entry.
+    let entryCount = arrayEntries.length;
+    //rowOfInterest is used to keep non-stopping trains away from table if they haven't been requested.
+    //Also used, when sorting by departures to filter out trains that terminate on selected station. (or similarly arrivals + line start.)
+    //Used also to filter out non passenger trains.
+    rowOfInterest = true;
+    //This variable is to easily select proper handling for each of timetable-entries and to get train's data to row's end when wanted timetable data's are listed:
+    arrayEntryNumber = 0;
+    //This variable is used to apply date object handling twice, in case that both arrivals and departures are selected.
+    secondDate = false
+    //Compares, if current train's type is found in nonPassengerTrainTypes:
+    if (nonPassengerTrainBoolean == false && nonPassengerTrainTypes.includes(arrayEntries[entryCount-2])) {
+      rowOfInterest = false;
+    }
+      //Following iterates through every object in data-array and returns train number and other data on same level:
+      arrayEntries.forEach(obj => {
+        //If subarray has been marked uninteresting, we may skip it's processing:
+        if (rowOfInterest) {
+          if (firstloop) {
+            //Create new row -element for first row of data:
+            //For next trains, new rows are created after this arrayEntries.forEach -loop which handles timetable entries.
+            window['iteratedTableRow'+tableRowNumber] = document.createElement('tr');
+            firstloop = false;
           }
-          arrayEntryNumber ++;
-          //Following clause handles first date object of subarray and checks if next object is also date object.
-          //If so, this clause get's executed again by secondDate -boolean.
-        } else if (rowOfInterest && arrayEntryNumber == 1 || arrayEntryNumber == 2 && secondDate) {
-          //Reset secondDate if it's set:
-          if (secondDate) {
-            secondDate = false;
-          }
-          //Make sure at first that this entry is date entry:
-          if (obj instanceof Date) {
-            //Convert date object's unix -timestamp to hours+minutes+seconds:
-            hours = obj.getHours();
-            minutes = obj.getMinutes();
-            seconds = obj.getSeconds();
-            //Add leading zero to minutes and seconds if value < 10
-            minutes = minutes < 10 ? "0" + minutes : minutes;
-            seconds = seconds < 10 ? "0" + seconds : seconds;
-            //Create cell with rolling number in variable name:
-            window['iterated'+tableComponentNumber] = document.createElement('td');
-            //Set cell's value to hours:
-            window['iterated'+tableComponentNumber].textContent = hours;
-            //Append : + minutes/seconds to that cell.
-            window['iterated'+tableComponentNumber].textContent += ":"+minutes;
-            window['iterated'+tableComponentNumber].textContent += ":"+seconds;
-            //Append cell with time to current train's table row:
-            window['iteratedTableRow'+tableRowNumber].appendChild(window['iterated'+tableComponentNumber]);
-            //After this clause is executed, cell is done and we can increment cells number by one, to get clear cell for next entries:
-            tableComponentNumber +=1;
-          } else {
-            //If there isn't time-entries in cells, where they should be, this checks if there's markings of line's start or termination, and appends that info to table as it is.
-            //Cleans also trains from terminal stations, which have only arrival/departure time, in case of opposite is selected.
-
-            if (obj=="Line start") {
-              //Refinement: If sorting is by arrivals, we probably don't want to see starting trains at all:
-              if (sortorder.value == 2 || sortorder.value == 3) {
-                rowOfInterest = false;
-              } 
-            } else if (obj=="Terminates") {
-              //This requires triggering secondDate below to work:
-              if (sortorder.value == 0 || sortorder.value == 1) {
-                rowOfInterest = false;
-              } 
-            }
-            //refactoring of this else statement 29.4.2024:
-            window['iterated'+tableComponentNumber] = document.createElement('td');
-            window['iterated'+tableComponentNumber].textContent = obj;
-            window['iteratedTableRow'+tableRowNumber].appendChild(window['iterated'+tableComponentNumber]);
-            tableComponentNumber +=1;
-          }
-          //Check if next obj is also timestamp. Triggers new round with secondDate also, if there's termination code in next array entry:
-          if (arrayEntries[arrayEntryNumber+1] instanceof Date || arrayEntries[arrayEntryNumber+1] == "Terminates") {
-            secondDate = true;
-          }
-          arrayEntryNumber++;
-        } else if (rowOfInterest && arrayEntryNumber > 1) {
-          if (arrayEntryNumber == entryCount-3) {
-            //Third last entry of array, which should be station code.
-            //Converts displayed station code to station name.
-
-            //First we try to find station code:
-            // Check if any property value contains the keyword
-            var codeContainingObject = trainStations.find(function(item) {
-              return item.hasOwnProperty('stationShortCode') && typeof item.stationShortCode === "string" && item.stationShortCode === obj;
-            });
+          //Yes/no if non-stopping trains have been selected:
+          if (arrayEntryNumber == 0) {
+            if (nonStoppingBoolean) {
               window['iterated'+tableComponentNumber] = document.createElement('td');
-            if (codeContainingObject) {
-              // Get the index of the entry
-              var entryIndex = trainStations.indexOf(codeContainingObject);
-              window['iterated'+tableComponentNumber].textContent = trainStations[entryIndex].stationName;
-            } else {
               window['iterated'+tableComponentNumber].textContent = obj;
+              window['iteratedTableRow'+tableRowNumber].appendChild(window['iterated'+tableComponentNumber]);
+              tableComponentNumber ++;
+            } else if (obj == "No.") {
+              //If non-stopping trains haven't requested and stop -indicator is "No." skip that entry.
+              rowOfInterest = false;
             }
-            window['iteratedTableRow'+tableRowNumber].appendChild(window['iterated'+tableComponentNumber]);      
-          } else if (arrayEntryNumber == entryCount-2) {
-            //Second last cell (Train type)
-            //Create cell:
-            window['iterated'+tableComponentNumber] = document.createElement('td');
-            //Put array position's contents into cell:
-            window['iterated'+tableComponentNumber].textContent = obj;
-            //Take 1 back of tablecomponentnumber, so when it gets additioned after these statements, it remains same for else if below.
-            //This could probably also be made by using -1 on tablecomponentnumber below.
-            tableComponentNumber --;
-          } else if (arrayEntryNumber == entryCount-1) {
-            //Last cell (Train number)
-            window['iterated'+tableComponentNumber].textContent += obj;
-            window['iteratedTableRow'+tableRowNumber].appendChild(window['iterated'+tableComponentNumber]);
-            //tableComponentNumberIncrement = 1;
+            arrayEntryNumber ++;
+            //Following clause handles first date object of subarray and checks if next object is also date object.
+            //If so, this clause get's executed again by secondDate -boolean.
+          } else if (rowOfInterest && arrayEntryNumber == 1 || arrayEntryNumber == 2 && secondDate) {
+            //Reset secondDate if it's set:
+            if (secondDate) {
+              secondDate = false;
+            }
+            //Make sure at first that this entry is date entry:
+            if (obj instanceof Date) {
+              //Convert date object's unix -timestamp to hours+minutes+seconds:
+              hours = obj.getHours();
+              minutes = obj.getMinutes();
+              seconds = obj.getSeconds();
+              //Add leading zero to minutes and seconds if value < 10
+              minutes = minutes < 10 ? "0" + minutes : minutes;
+              seconds = seconds < 10 ? "0" + seconds : seconds;
+              //Create cell with rolling number in variable name:
+              window['iterated'+tableComponentNumber] = document.createElement('td');
+              //Set cell's value to hours:
+              window['iterated'+tableComponentNumber].textContent = hours;
+              //Append : + minutes/seconds to that cell.
+              window['iterated'+tableComponentNumber].textContent += ":"+minutes;
+              window['iterated'+tableComponentNumber].textContent += ":"+seconds;
+              //Append cell with time to current train's table row:
+              window['iteratedTableRow'+tableRowNumber].appendChild(window['iterated'+tableComponentNumber]);
+              //After this clause is executed, cell is done and we can increment cells number by one, to get clear cell for next entries:
+              tableComponentNumber +=1;
+            } else {
+              //If there isn't time-entries in cells, where they should be, this checks if there's markings of line's start or termination, and appends that info to table as it is.
+              //Cleans also trains from terminal stations, which have only arrival/departure time, in case of opposite is selected.
+              if (obj=="Line start") {
+                //Refinement: If sorting is by arrivals, we probably don't want to see starting trains at all:
+                if (sortorder.value == 2 || sortorder.value == 3) {
+                  rowOfInterest = false;
+                } 
+              } else if (obj=="Terminates") {
+                //This requires triggering secondDate below to work:
+                if (sortorder.value == 0 || sortorder.value == 1) {
+                  rowOfInterest = false;
+                } 
+              }
+              //refactoring of this else statement 29.4.2024:
+              window['iterated'+tableComponentNumber] = document.createElement('td');
+              window['iterated'+tableComponentNumber].textContent = obj;
+              window['iteratedTableRow'+tableRowNumber].appendChild(window['iterated'+tableComponentNumber]);
+              tableComponentNumber +=1;
+            }
+            //Check if next obj is also timestamp. Triggers new round with secondDate also, if there's termination code in next array entry:
+            if (arrayEntries[arrayEntryNumber+1] instanceof Date || arrayEntries[arrayEntryNumber+1] == "Terminates") {
+              secondDate = true;
+            }
+            arrayEntryNumber++;
+          } else if (rowOfInterest && arrayEntryNumber > 1) {
+            if (arrayEntryNumber == entryCount-3) {
+              //Third last entry of array, which should be station code.
+              //Converts displayed station code to station name.
+              //First we try to find station code:
+              // Check if any property value contains the keyword
+              var codeContainingObject = trainStations.find(function(item) {
+                return item.hasOwnProperty('stationShortCode') && typeof item.stationShortCode === "string" && item.stationShortCode === obj;
+              });
+                window['iterated'+tableComponentNumber] = document.createElement('td');
+              if (codeContainingObject) {
+                // Get the index of the entry
+                var entryIndex = trainStations.indexOf(codeContainingObject);
+                window['iterated'+tableComponentNumber].textContent = trainStations[entryIndex].stationName;
+              } else {
+                window['iterated'+tableComponentNumber].textContent = obj;
+              }
+              window['iteratedTableRow'+tableRowNumber].appendChild(window['iterated'+tableComponentNumber]);      
+            } else if (arrayEntryNumber == entryCount-2) {
+              //Second last cell (Train type)
+              //Create cell:
+              window['iterated'+tableComponentNumber] = document.createElement('td');
+              //Put array position's contents into cell:
+              window['iterated'+tableComponentNumber].textContent = obj;
+              //Take 1 back of tablecomponentnumber, so when it gets additioned after these statements, it remains same for else if below.
+              //This could probably also be made by using -1 on tablecomponentnumber below.
+              tableComponentNumber --;
+            } else if (arrayEntryNumber == entryCount-1) {
+              //Last cell (Train number)
+              window['iterated'+tableComponentNumber].textContent += obj;
+              window['iteratedTableRow'+tableRowNumber].appendChild(window['iterated'+tableComponentNumber]);
+              //tableComponentNumberIncrement = 1;
+            } else {
+              window['iterated'+tableComponentNumber] = document.createElement('td');
+              window['iterated'+tableComponentNumber].textContent = obj;
+              window['iteratedTableRow'+tableRowNumber].appendChild(window['iterated'+tableComponentNumber]);
+            }
+            arrayEntryNumber ++;
           } else {
-            window['iterated'+tableComponentNumber] = document.createElement('td');
-            window['iterated'+tableComponentNumber].textContent = obj;
-            window['iteratedTableRow'+tableRowNumber].appendChild(window['iterated'+tableComponentNumber]);
+            console.error("Populatetable condition 4 (Else. Shouldn't never appear)");
           }
-          arrayEntryNumber ++;
-        } else {
-          console.error("Populatetable condition 4 (Else. Shouldn't never appear)");
+          //tableComponentNumber = tableComponentNumber + tableComponentNumberIncrement;
+          tableComponentNumber++;
         }
-        //tableComponentNumber = tableComponentNumber + tableComponentNumberIncrement;
-        tableComponentNumber++;
-      }
-    });
+      });
     //If subarray had relevant data, append row to table body:
     if (rowOfInterest) {
       TableBody.appendChild(window['iteratedTableRow'+tableRowNumber]);
@@ -941,11 +944,10 @@ arrayOfArrays.forEach(arrayEntries => {
     //Create new row element with new number for next line:
     window['iteratedTableRow'+tableRowNumber] = document.createElement('tr');
   });
-    //Add table body to table:
+  //Add table body to table:
   Table.appendChild(TableBody);
-
-//Clear target div before appending table:
-targetdiv.innerHTML = "";
-//Finally, inject table to target div:
-targetdiv.appendChild(Table);
+  //Clear target div before appending table:
+  targetdiv.innerHTML = "";
+  //Finally, inject table to target div:
+  targetdiv.appendChild(Table);
 }

@@ -148,6 +148,7 @@ document.getElementById("searchSuggestions").addEventListener('click', function(
 document.getElementById("stationDropDown").addEventListener('change', function() {
   //Clear also textbox when dropdown is used:
   document.getElementById("stationsearch").value="";
+  document.getElementById("stationsearchByName").value="";
   lastChanged="dropdown";
   initializeLoad(lastChanged);
 });

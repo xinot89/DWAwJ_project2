@@ -8,115 +8,113 @@
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <div id="taskbrief">
-        Features:
-        <ul>
-            <li>Generates query from set station and train count</li>
-            <li>If dropdown -menu is used, search box empties automatically.</li>
-            <li>Checkboxes have 1sec delay before submitting.</li>
-            <li>If sorting is requested by non-selected times, requested times are displayed.</li>
-            <li>Sort menu also updates used sorting when checkboxes are clicked.</li>
-            <li>Translates station codes into station names.</li>
-            <li>Station search by station name.
-                <ul>
-                    <li>Refined, now gives also suggestions and is automatically fixes first letter, if lowercase.</li>
-                </ul>
-            </li>
-        </ul>
-        Issues, starting from 4.5:
-        <ul>
-            <li>When sorting trains by departure time for example in Tampere while both, arrivals and departures are selected, sorting might not work properly when starting/terminating trains start to appear on array.
-                <ul><li>Solved by removing departures from data when sorting by arrivals.</li></ul>
-            </li>
-            <li>When switching between sorting with arrivals/departures on terminating station, all trains disappear.
-                <ul><li>Solved by adding ".slice&lpar;&rpar;" to line, which takes stored data.</li></ul>
-            </li>
-            <li>P&I -trains are problematic to show relevant destination info as they start and terminate on same station.</li>
-        </ul>
-        <br>
-    </div>
-    <div id ="choosebar" class="container">
-        <div class="item">
-            Preselected stations:
-            <select name="mySelect" id="stationDropDown">
-                <option value="Dummy">-</option>
-                <option value="ML">Malmi</option>
-                <option value="TNA">Tapanila</option>
-                <option value="PLA" selected>Puistola</option>
-                <option value="TKL">Tikkurila</option>
-            </select>
-            <p>
-                Enter station code:<br><input id="stationsearch"><button id="stationSearchButton">Search</button><!--<span id="cityerroroutput"></span>-->
-            </p>
-            <p>
-                Or search by station's name:<br>
-                <input id="stationsearchByName"><button id="stationSearchByNameButton">Search</button>
-                <br><span id="searchSuggestions"></span>
-            </p>
-            Count of trains to fetch:
-            <div>
-              <input type="radio" id="radio_5" name="howManyToFetch" value="5" checked>
-              <label for="radio_5">5 (Default)</label>
+    <div id="contentdiv">
+        <h1>Station arrival/departure monitor</h1>
+        <div id ="choosebar" class="container">
+            <div class="item">
+                Preselected stations:
+                <select name="mySelect" id="stationDropDown">
+                    <option value="Dummy">-</option>
+                    <option value="ML">Malmi</option>
+                    <option value="TNA">Tapanila</option>
+                    <option value="PLA" selected>Puistola</option>
+                    <option value="TKL">Tikkurila</option>
+                </select>
+                <p>
+                    Enter station code:<br><input id="stationsearch"><button id="stationSearchButton">Search</button><!--<span id="cityerroroutput"></span>-->
+                </p>
+                <p>
+                    Or search by station's name:<br>
+                    <input id="stationsearchByName"><button id="stationSearchByNameButton">Search</button>
+                    <br><span id="searchSuggestions"></span>
+                </p>
+                Count of trains to fetch:
+                <div>
+                <input type="radio" id="radio_5" name="howManyToFetch" value="5" checked>
+                <label for="radio_5">5 (Default)</label>
+                </div>
+                <div>
+                <input type="radio" id="radio_10" name="howManyToFetch" value="10">
+                <label for="radio_10">10</label>
+                </div>
+                <div>
+                <input type="radio" id="radio_20" name="howManyToFetch" value="20">
+                <label for="radio_20">20</label>
+                </div>
+                <div>
+                    <input type="radio" id="radio_40" name="howManyToFetch" value="40">
+                    <label for="radio_40">40</label>
+                </div>
             </div>
-            <div>
-              <input type="radio" id="radio_10" name="howManyToFetch" value="10">
-              <label for="radio_10">10</label>
-            </div>
-            <div>
-              <input type="radio" id="radio_20" name="howManyToFetch" value="20">
-              <label for="radio_20">20</label>
-            </div>
-            <div>
-                <input type="radio" id="radio_40" name="howManyToFetch" value="40">
-                <label for="radio_40">40</label>
-            </div>
-        </div>
-        <div class="item">
-            <div id="checkBoxes">
-                <!--Modifying these selections on webpage triggers initializeLoad-->
-                Show times for:<br>
-                <label>
-                    <input class="checkboxErrorGroup" type="checkbox" name="CheckboxGroup1" id="CheckboxGroup1_1">
-                    Arrivals
-                </label>
-                <br>
-                <label>
-                    <input class="checkboxErrorGroup" type="checkbox" checked name="CheckboxGroup1" id="CheckboxGroup1_3"> 
-                    Departures
-                </label>
-                <br>
-                <span id="checkboxErrorOutput"></span>
-                <br>
-                <label>
-                    <input type="checkbox" name="CheckboxGroup1" id="CheckboxGroup1_4"> 
-                    Non-stopping trains.
-                </label>
+            <div class="item">
+                <div id="checkBoxes">
+                    <!--Modifying these selections on webpage triggers initializeLoad-->
+                    Show times for:<br>
+                    <label>
+                        <input class="checkboxErrorGroup" type="checkbox" name="CheckboxGroup1" id="CheckboxGroup1_1">
+                        Arrivals
+                    </label>
                     <br>
-                <label>
-                    <input type="checkbox" name="CheckboxGroup1" id="CheckboxGroup1_5"> 
-                    Non-passenger trains.
-                </label>
+                    <label>
+                        <input class="checkboxErrorGroup" type="checkbox" checked name="CheckboxGroup1" id="CheckboxGroup1_3"> 
+                        Departures
+                    </label>
+                    <br>
+                    <span id="checkboxErrorOutput"></span>
+                    <br>
+                    <label>
+                        <input type="checkbox" name="CheckboxGroup1" id="CheckboxGroup1_4"> 
+                        Non-stopping trains.
+                    </label>
+                        <br>
+                    <label>
+                        <input type="checkbox" name="CheckboxGroup1" id="CheckboxGroup1_5"> 
+                        Non-passenger trains.
+                    </label>
+                </div>
+                <br>
+                Sort:
+                <select name="sortSelection" id="sortSelectionDropdown">
+                    <option value=0>Departures, Ascending</option>
+                    <option value=1>Departures, Descending</option>
+                    <option value=2>Arrivals, Ascending</option>
+                    <option value=3>Arrivals, Descending</option>
+                    <option value=4>Train #, Ascending</option>
+                    <option value=5>Train #, Descending</option>
+                </select>
             </div>
-            <br>
-            Sort:
-            <select name="sortSelection" id="sortSelectionDropdown">
-                <option value=0>Departures, Ascending</option>
-                <option value=1>Departures, Descending</option>
-                <option value=2>Arrivals, Ascending</option>
-                <option value=3>Arrivals, Descending</option>
-                <option value=4>Train #, Ascending</option>
-                <option value=5>Train #, Descending</option>
-            </select>
-            <p>
-            Sorting by arrivals hides trains starting their line from station.
-            <br> ...Sorting by departures hides terminating trains.
-            </p>
-            <!--arrived_trains=","arriving_trains=","departed_trains=","departing_trains=","include_nonstopping=","train_categories=-->
         </div>
-    </div>
-    <div id="contentbyscript">
-        
-    </div><br>
+        <div id="contentbyscript">
+            
+        </div><br>
+        <div id="taskbrief">
+            Features:
+            <ul>
+                <li>Generates query from set station and train count</li>
+                <li>If dropdown -menu is used, search boxes become empty.</li>
+                <li>Checkboxes have 1sec delay before submitting.</li>
+                <li>If sorting is requested by non-selected times, requested times are displayed.</li>
+                <li>Sort menu also updates used sorting when checkboxes are clicked.</li>
+                <li>Translates station codes into station names.</li>
+                <li>Station search by station name.
+                    <ul>
+                        <li>Refined, now gives also suggestions and is automatically fixes first letter, if lowercase.</li>
+                    </ul>
+                </li>
+            </ul>
+            Issues &lpar;Only since 4.5&rpar;:
+            <ul>
+                <li>When sorting trains by departure time for example in Tampere while both, arrivals and departures are selected, sorting might not work properly when starting/terminating trains start to appear on array.
+                    <ul><li>Solved by removing departures from data when sorting by arrivals.</li></ul>
+                </li>
+                <li>When switching between sorting with arrivals/departures on terminating station, all trains disappear.
+                    <ul><li>Solved by adding ".slice&lpar;&rpar;" to line, which takes stored data.</li></ul>
+                </li>
+                <li>P&I -trains are problematic to show relevant destination info as they start and terminate on same station.</li>
+            </ul>
+            <br>
+        </div>
+    </div> 
     <script src="scripts.js"></script>
 </body>
 </html>

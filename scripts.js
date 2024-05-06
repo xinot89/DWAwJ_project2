@@ -238,6 +238,8 @@ function initializeLoad(fromwhere) {
     //Get dropdown menu's value (Station code):
     targetStation = document.getElementById("stationDropDown").value;
   } else if (fromwhere == "searchbutton") {
+    //Move preselected stations -dropdown to dummy position:
+    document.getElementById("stationDropDown").selectedIndex = 0;
     //get textbox's entry:
     targetStation = document.getElementById("stationsearch").value;
     //Search entries in JSON:

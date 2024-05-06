@@ -406,7 +406,6 @@ async function datafetch(startParameters) {
       console.error('There was a problem with the fetch operation:', error);
     });
   }
-  //console.log(fetchurl)
 }
 
 /*Function to load data to array.*/
@@ -668,8 +667,8 @@ function loadData(inputdata) {
 async function populatetable(dataarray) {
   var arrayOfArrays = [];
   if (dataarray[0]=="Sortrequest") {
-    //Fill arrayOfArrays with stored data:
-    arrayOfArrays = dataarrayStore;
+    //Take preloaded array from store, use .slice because otherwise javascript would only make new reference to source array.
+    arrayOfArrays = dataarrayStore.slice();
   } else {
     //This block was originally start of function, until i started developing sorting.
     /*Originally i meant to use flat array as input for this function, which i then swapped to subarray -structure

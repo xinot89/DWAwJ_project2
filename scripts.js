@@ -1,7 +1,5 @@
-/* Aletaan pusertamaan seuraavalla eteenpäin:
-https://www.digitraffic.fi/en/railway-traffic/
-
-Finnish documentation:
+/*
+Finnish documentation of API:
 https://www.digitraffic.fi/rautatieliikenne/
 
 Train types:
@@ -267,6 +265,10 @@ function initializeLoad(fromwhere) {
   //Variable to make sure that even something is selected before proceeding with fetching:
   proceed = false;
 
+  //Take arriving and departing boolean values:
+  departingBoolean = departureCheckbox.checked;
+  arrivingBoolean = arrivalCheckbox.checked;
+
   //Make variable for url part which length's verification is easy and can be left empty if concerning checkbox is unchecked:
   //First, set each fetch -setting to 0:
   arrivedComponent = "?arrived_trains=0";
@@ -276,13 +278,14 @@ function initializeLoad(fromwhere) {
   //24.4.2024: Removed arrived/departed selections from page as their value add is questionable.
   //arrivedBoolean = document.getElementById("CheckboxGroup1_0").checked;
   arrivedBoolean = false;
+  
   //...And if entry data in question is requested, take amount to fetch from radio button's options and modify request URL accordingly:
   if (arrivedBoolean) {
     arrivedComponent = "?arrived_trains="+fetchcount;
     proceed = true;
   }
   arrivingComponent = "&arriving_trains=0";
-  arrivingBoolean = arrivalCheckbox.checked;
+  
   //Set sorting by selected data if it's set to unselected data:
   //Sortorder 0-1: departures
   //Change sort order to "Arrivals, ascending" if sorting by departures is selected but departures aren't fetched:
@@ -301,7 +304,6 @@ function initializeLoad(fromwhere) {
     proceed = true;
   }
   departingComponent = "&departing_trains=0";
-  departingBoolean = departureCheckbox.checked;
   //Set sorting by selected data if it's set to unselected data:
   //Sortorder 2-3: arrivals
   //Change sort order to "Departures, ascending" if sorting by arrivals is selected but arrivals aren't fetched:

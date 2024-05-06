@@ -770,8 +770,20 @@ async function populatetable(dataarray) {
   const TrainDestination = document.createElement("th");
   const TrainNumber = document.createElement("th");
   //Create needed heading -columns to table:
+
   //First, there's "now showing" -heading row for clarity, as at the moment there's 3 elements where station can be selected:
-  NowShowingHeadingCell.textContent="Now showing: "+ targetStation;
+  //This finds target station's code from property "stationShortCode" and stores it as object:
+  var stationContainingObject = trainStations.find(function(item) {
+    return item.hasOwnProperty('stationShortCode') && typeof item.stationShortCode === "string" && item.stationShortCode === targetStation;
+  });
+  //If object is found, this gets it's index number and uses it to get station name from station data:
+  if (stationContainingObject) {
+    var stationContainingIndex = trainStations.indexOf(stationContainingObject);
+    NowShowingHeadingCell.textContent="Now showing: "+ trainStations[stationContainingIndex].stationName;
+  } else {
+    //If name isn't found using code, print just station's short code as output:
+    NowShowingHeadingCell.textContent="Now showing: "+ targetStation;
+  }
   //Set colspan to 5, so "Now showing goes in middle of table's top:"
   /*Fixed colspan causes "Now showing" to shift left if non-stopping trains or both, departure and arrival times are selected
   But this problem seems so minor that adding variables to set colspan isn't worth it. */

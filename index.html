@@ -38,12 +38,13 @@
                 </ul>
             </li>
         </ul>
-        Issues:
+        Issues, starting from 4.5:
         <ul>
             <li>When sorting trains by departure time for example in Tampere while both, arrivals and departures are selected, sorting might not work properly when starting/terminating trains start to appear on array.
                 <ul><li>Solved by removing departures from data when sorting by arrivals.</li></ul>
             </li>
             <li>When switching between sorting with arrivals/departures on terminating station, all trains disappear.</li>
+            <ul><li>Solved by adding ".slice&lpar;&rpar;" to line, which takes stored data.</li></ul>
         </ul>
         <br>
     </div>

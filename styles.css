@@ -1,5 +1,9 @@
 body {
     font-size: medium;
+    background-color:blanchedalmond;
+}
+h1 {
+    text-align: center;
 }
 /*Used flexbox instead of tables for formatting. Used tutorial:
 https://css-tricks.com/snippets/css/a-guide-to-flexbox/
@@ -8,17 +12,22 @@ https://css-tricks.com/snippets/css/a-guide-to-flexbox/
     display: flex;
     justify-content: flex-start;
 }
-.item {
-    border: solid;
-    padding: 1em;
+#contentdiv {
+    background-color: white;
+    width: 40em;
+    border-radius: 20px;
+    padding-left: 1em;
+    padding-right: 1em;
 }
-#debugContentByScript {
-    display: none;
+.item {
+    /*Divs containing selections.*/
+    /*border: solid;*/
+    padding: 1em;
 }
 table {
     border-collapse: collapse;
-    width: 700px;
     border: 1px solid black;
+    width: 32em;
 }
 th, td {
     padding: 4px;
@@ -26,18 +35,7 @@ th, td {
     font-size: 12px;
     text-align: center;
 }
-#sampledatalink {
-    font-size: 3em;
-}
-.checkboxErrorOverlay {
 
-    /*h+v offset, blur radius, spread radius, color.......*/
-    box-shadow: 0 0 0 1rem rgba(255, 0, 0, 0.25);
-    accent-color: green;
-    background-color: red;
-    background: #0de281;
-    outline: 3px solid black;
-}
 #checkboxErrorOutput {
     font-weight: bold;
     color: red;

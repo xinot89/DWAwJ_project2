@@ -13,6 +13,8 @@ https://rata.digitraffic.fi/api/v1/metadata/stations
 document.addEventListener('DOMContentLoaded', () => {
   //Clear also textbox when page is refreshed/loaded:
   document.getElementById("stationsearch").value="";
+  //Also empty "search by name" -box on page load:
+  document.getElementById("stationsearchByName").value="";
   //Load auxiliary data automatically on page load: (Stations and train types)
   datafetch("Pageload");
   //Load automatically preselected station's times:
@@ -22,15 +24,6 @@ document.addEventListener('DOMContentLoaded', () => {
 /*I used https://jshint.com/ for additional checking of code, this is to tell checker that my code is using functionalities from EcmaScript 6:*/
 /*jshint esversion: 6 */
 
-/* Short tutorial on event handlers: https://blog.logrocket.com/dynamically-create-javascript-elements-event-handlers/
-Cannot make sense on */
-//Training section for fetching some data to site and formatting tables:
-/*Variables:
-let -only available inside the block where they're defined
-var -available throught the function in which they're declared
-https://sentry.io/answers/difference-between-let-and-var-in-javascript/
-*/
-
 //Initialize targetStation -variable here, so it can be used on all functions.
 targetStation = "";
 
@@ -38,9 +31,9 @@ targetStation = "";
 //input when e.g. radio buttons are changed.
 lastChanged = "dropdown";
 
-/*Initialize checkboxex boolean values here
+/*Initialize checkboxes' boolean values here
 initializeLoad -function sets then to actual values for each round
-and populatetable -function makes table's headings according to these.
+and populatetable -function makes table's headings and data content according to these.
 */
 arrivedBoolean = false;
 arrivingBoolean = false;
@@ -56,7 +49,7 @@ trainStations = null;
 
 //Storage for fetched data, so no new fetch is necessary when sorting data:
 //Used by populateTable -function.
-dataarrayStore = []
+dataarrayStore = [];
 
 //array for station names for station suggestions:
 stationNames = [];
@@ -64,17 +57,14 @@ stationNames = [];
 //Dropdown menu for selecting sorting order:
 const sortorder = document.getElementById("sortSelectionDropdown");
 //Arrival and departure checkboxes:
-const arrivalCheckbox = document.getElementById("CheckboxGroup1_1")
-const departureCheckbox = document.getElementById("CheckboxGroup1_3")
+const arrivalCheckbox = document.getElementById("CheckboxGroup1_1");
+const departureCheckbox = document.getElementById("CheckboxGroup1_3");
 //Variable to store populatetable's sorting order:
 /*
 0: departures, ascending
 1: departures, descending
 2: arrivals, ascending
 3: arrivals, descending */
-//Original sortorder -variable before dropdown:
-//sortorder = 0;
-
 //Variable where if statement can check if interval is already running:
 let intervalForCheckboxes = 0;
 const initialcheckboxdelay = 1000;
@@ -106,7 +96,6 @@ document.getElementById("stationSearchByNameButton").addEventListener('click', f
 document.getElementById("stationsearchByName").addEventListener('keyup', function() {
   //Get station search box's value as query:
   const searchSuggestionQuery = document.getElementById("stationsearchByName").value;
-
   //Set div to variable, where to place suggestions:
   const suggestionsTargetDiv = document.getElementById("searchSuggestions");
   //Empty previous suggestions first:
@@ -134,8 +123,8 @@ document.getElementById("stationsearchByName").addEventListener('keyup', functio
     suggestionsTargetDiv.append(window['suggestionButton'+suggestionNumber]);
     suggestionNumber ++;
   });
-  });
-  //Event listener for search suggestions div:
+});
+//Event listener for search suggestions div:
 document.getElementById("searchSuggestions").addEventListener('click', function() {
   //https://stackoverflow.com/questions/63199551/how-to-get-the-values-of-buttons-with-eventlistener
   const clickedButton = event.target;
